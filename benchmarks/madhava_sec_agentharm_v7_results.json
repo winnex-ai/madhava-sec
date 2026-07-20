@@ -1,0 +1,140 @@
+{
+  "version": "7.0",
+  "dataset": "ai-safety-institute/AgentHarm",
+  "n_behaviors": 416,
+  "n_tools": 85,
+  "budgets": [
+    100,
+    500,
+    1000,
+    1500
+  ],
+  "results": {
+    "greedy": [
+      {
+        "budget": 100,
+        "unique_tools": 30,
+        "successes": 56,
+        "llm_calls": 100,
+        "long_tail_successes": 0,
+        "conversion_rate": 0.56,
+        "tools_per_call": 0.3,
+        "accuracy": 0.56
+      },
+      {
+        "budget": 500,
+        "unique_tools": 85,
+        "successes": 208,
+        "llm_calls": 416,
+        "long_tail_successes": 0,
+        "conversion_rate": 0.5,
+        "tools_per_call": 0.20432692307692307,
+        "accuracy": 0.5
+      },
+      {
+        "budget": 1000,
+        "unique_tools": 85,
+        "successes": 208,
+        "llm_calls": 416,
+        "long_tail_successes": 0,
+        "conversion_rate": 0.5,
+        "tools_per_call": 0.20432692307692307,
+        "accuracy": 0.5
+      },
+      {
+        "budget": 1500,
+        "unique_tools": 85,
+        "successes": 208,
+        "llm_calls": 416,
+        "long_tail_successes": 0,
+        "conversion_rate": 0.5,
+        "tools_per_call": 0.20432692307692307,
+        "accuracy": 0.5
+      }
+    ],
+    "explore": [
+      {
+        "budget": 100,
+        "unique_tools": 71,
+        "successes": 50,
+        "llm_calls": 100,
+        "long_tail_successes": 0,
+        "conversion_rate": 0.5,
+        "tools_per_call": 0.71,
+        "accuracy": 0.5
+      },
+      {
+        "budget": 500,
+        "unique_tools": 85,
+        "successes": 170,
+        "llm_calls": 416,
+        "long_tail_successes": 0,
+        "conversion_rate": 0.40865384615384615,
+        "tools_per_call": 0.20432692307692307,
+        "accuracy": 0.4748603351955307
+      },
+      {
+        "budget": 1000,
+        "unique_tools": 85,
+        "successes": 208,
+        "llm_calls": 416,
+        "long_tail_successes": 0,
+        "conversion_rate": 0.5,
+        "tools_per_call": 0.20432692307692307,
+        "accuracy": 0.5
+      },
+      {
+        "budget": 1500,
+        "unique_tools": 85,
+        "successes": 208,
+        "llm_calls": 416,
+        "long_tail_successes": 0,
+        "conversion_rate": 0.5,
+        "tools_per_call": 0.20432692307692307,
+        "accuracy": 0.5
+      }
+    ],
+    "random": [
+      {
+        "budget": 100,
+        "unique_tools": 77.15,
+        "successes": 48.0,
+        "llm_calls": 100.0,
+        "long_tail_successes": 0.0,
+        "conversion_rate": 0.48,
+        "tools_per_call": 0.7714999999999999,
+        "accuracy": 0.48
+      },
+      {
+        "budget": 500,
+        "unique_tools": 85.0,
+        "successes": 208.0,
+        "llm_calls": 416.0,
+        "long_tail_successes": 0.0,
+        "conversion_rate": 0.5,
+        "tools_per_call": 0.20432692307692304,
+        "accuracy": 0.5
+      },
+      {
+        "budget": 1000,
+        "unique_tools": 85.0,
+        "successes": 208.0,
+        "llm_calls": 416.0,
+        "long_tail_successes": 0.0,
+        "conversion_rate": 0.5,
+        "tools_per_call": 0.20432692307692304,
+        "accuracy": 0.5
+      },
+      {
+        "budget": 1500,
+        "unique_tools": 85.0,
+        "successes": 208.0,
+        "llm_calls": 416.0,
+        "long_tail_successes": 0.0,
+        "conversion_rate": 0.5,
+        "tools_per_call": 0.20432692307692304,
+        "accuracy": 0.5
+      }
+    ]
+  }
+}

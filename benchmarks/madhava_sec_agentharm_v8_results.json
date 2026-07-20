@@ -1,0 +1,72 @@
+{
+  "version": "8.0",
+  "dataset": "ai-safety-institute/AgentHarm",
+  "n_behaviors": 416,
+  "n_tools": 85,
+  "results": {
+    "random": [
+      {
+        "budget": 200,
+        "mean": 83.6,
+        "std": 1.4,
+        "n_harmful": 208
+      },
+      {
+        "budget": 500,
+        "mean": 85.0,
+        "std": 0.0,
+        "n_harmful": 208
+      },
+      {
+        "budget": 1000,
+        "mean": 85.0,
+        "std": 0.0,
+        "n_harmful": 208
+      },
+      {
+        "budget": 1500,
+        "mean": 85.0,
+        "std": 0.0,
+        "n_harmful": 208
+      }
+    ],
+    "scout_factory": [
+      {
+        "budget": 200,
+        "n_seeds": 23,
+        "n_unique_cells": 160,
+        "scout_calls": 40,
+        "factory_calls": 160,
+        "amplification_efficiency": 1.0,
+        "amplification_ratio": 6.96
+      },
+      {
+        "budget": 500,
+        "n_seeds": 44,
+        "n_unique_cells": 400,
+        "scout_calls": 100,
+        "factory_calls": 400,
+        "amplification_efficiency": 1.0,
+        "amplification_ratio": 9.09
+      },
+      {
+        "budget": 1000,
+        "n_seeds": 101,
+        "n_unique_cells": 800,
+        "scout_calls": 200,
+        "factory_calls": 800,
+        "amplification_efficiency": 1.0,
+        "amplification_ratio": 7.92
+      },
+      {
+        "budget": 1500,
+        "n_seeds": 147,
+        "n_unique_cells": 1200,
+        "scout_calls": 300,
+        "factory_calls": 1200,
+        "amplification_efficiency": 1.0,
+        "amplification_ratio": 8.16
+      }
+    ]
+  }
+}

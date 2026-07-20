@@ -1,0 +1,44 @@
+{
+  "id": "kleniopadilha/madhava-sec-benchmark",
+  "title": "Madhava-Sec: Mathematically Guaranteed Agent Security Benchmark",
+  "subtitle": "Cauchy-Schwarz upper-bound pruning for Kaggle AI Agent Security",
+  "code_file": "madhava_sec_benchmark.py",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": false,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "enable_tpu": false,
+  "model_strategy": "none",
+  "dataset_sources": [],
+  "competition_sources": ["aicomp-sdk"],
+  "kernel_sources": [],
+  "accelerator_docker": null,
+  "docker_image": null,
+  "gpu_type": "gpu_p100",
+  "requirements": {
+    "python": "3.10",
+    "libraries": [
+      "numpy>=1.24.0",
+      "faiss-cpu>=1.7.4"
+    ],
+    "description": "Requires Kaggle AI Competition SDK (aicomp-sdk). Madhava-Sec framework included inline."
+  },
+  "resources": {
+    "max_llm_calls": 1500,
+    "time_budget_s": 54000,
+    "max_tool_hops": 10,
+    "vram_gb": 16,
+    "ram_gb": 31,
+    "cpus": 4
+  },
+  "description": "Benchmark comparativo: Madhava-Sec vs Random / BFS / Genetic baselines. Usa Cauchy-Schwarz upper bound pruning com garantia 0% violacao para busca de ataques em agentes de IA.",
+  "keywords": [
+    "madhava",
+    "cauchy-schwarz",
+    "agent-security",
+    "adversarial",
+    "mathematical-guarantee",
+    "benchmark"
+  ]
+}

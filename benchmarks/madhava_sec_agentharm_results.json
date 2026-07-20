@@ -1,0 +1,93 @@
+{
+  "dataset": "ai-safety-institute/AgentHarm",
+  "n_behaviors": 416,
+  "n_tools": 85,
+  "madhava_dims": [
+    64,
+    128
+  ],
+  "ranking": {
+    "direct": {
+      "ndcg_05": 1.0,
+      "ndcg_10": 1.0,
+      "ndcg_20": 1.0,
+      "ap": 1.0,
+      "p_05": 1.0,
+      "p_10": 1.0,
+      "r_05": 0.012,
+      "r_10": 0.024,
+      "spearman": 1.0
+    },
+    "madhava": {
+      "ndcg_05": 1.0,
+      "ndcg_10": 1.0,
+      "ndcg_20": 1.0,
+      "ap": 1.0,
+      "p_05": 1.0,
+      "p_10": 1.0,
+      "r_05": 0.012,
+      "r_10": 0.024,
+      "spearman": 0.9469
+    },
+    "random": {
+      "ndcg_05": 0.5683000087738037,
+      "ndcg_10": 0.5066999793052673,
+      "ndcg_20": 0.5196999907493591,
+      "ap": 1.0,
+      "p_05": 1.0,
+      "p_10": 1.0,
+      "r_05": 0.012,
+      "r_10": 0.024,
+      "spearman": -0.0153
+    },
+    "corr_direct_madhava": 0.9469,
+    "time_direct_s": 0.0003,
+    "time_madhava_s": 0.0016
+  },
+  "pruning": {
+    "n_total": 416,
+    "n_positive_total": 208,
+    "n_positive_found": 4,
+    "llm_calls": 8,
+    "n_pruned": 408,
+    "calls_saved_vs_all": 408,
+    "calls_saved_pct": 98.1,
+    "bound_violations": 0,
+    "coverage": 0.0192
+  },
+  "gs_diversity": {
+    "5": {
+      "gs_mean": 24.0,
+      "gs_std": 0.0,
+      "random_mean": 14.5,
+      "random_std": 2.8,
+      "gain_pct": 65.5
+    },
+    "10": {
+      "gs_mean": 39.0,
+      "gs_std": 0.0,
+      "random_mean": 24.5,
+      "random_std": 3.4,
+      "gain_pct": 59.3
+    },
+    "20": {
+      "gs_mean": 59.0,
+      "gs_std": 0.0,
+      "random_mean": 38.6,
+      "random_std": 3.5,
+      "gain_pct": 53.0
+    }
+  },
+  "int8": {
+    "tool_vectors": {
+      "mse_mean": 0.0,
+      "cosine_mean": 1.0,
+      "cosine_min": 1.0
+    },
+    "embeddings_384d": {
+      "mse_mean": 1.4e-07,
+      "cosine_mean": 0.999974,
+      "cosine_min": 0.999946
+    }
+  }
+}
