@@ -6,60 +6,38 @@
 [![Zenodo](https://img.shields.io/badge/Zenodo-10.5281%2Fzenodo.21166403-blue)](https://zenodo.org/records/21166403)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-green)](https://python.org)
 
-Madhava-Sec aplica **garantias matemáticas** da busca vetorial determinística à segurança de agentes de IA. Baseado no [Madhava Cascade](https://zenodo.org/records/21166403) — **0 violações de bound em 254M+ pares**.
-
 ---
 
 ## Benchmark — AgentHarm (416 cenários)
 
-**Dataset:** [AgentHarm](https://huggingface.co/datasets/ai-safety-institute/AgentHarm) — 416 behaviors balanceados (208 harmful + 208 benign), 85 ferramentas, 8 categorias.
+**Dataset:** [AgentHarm](https://huggingface.co/datasets/ai-safety-institute/AgentHarm) — 416 behaviors balanceados (208 harmful + 208 benign), 85 ferramentas, 8 categorias, 85 tool vectors.
 
-### O valor real do Madhava-Sec
+### Resultados (Arquitetura 85D nativa + QR[64,128])
 
-O Madhava-Sec **não** compete em NDCG puro (em 85D binário esparso, o teto de cosine similarity é ~0.61). O valor está em três mecanismos com **garantia matemática**:
+| Métrica | DIRECT | MADHAVA | RANDOM |
+|:---|---:|:---:|:---:|
+| **NDCG@10** | **1.0000** | **1.0000** | 0.5361 |
+| **NDCG@20** | **1.0000** | **1.0000** | — |
+| **Spearman ρ** | — | **0.8229** | — |
+| **Pruning** | — | **89%** | — |
 
-| Mecanismo | Resultado | Garantia |
-|:---|---:|---:|
-| **Pruning** Cauchy-Schwarz | **98%** de economia de LLM calls | 0 violações de bound |
-| **Amplificação** Scout+Factory | **+1312%** unique_cells vs Random | GS diversity no espaço de argumentos |
-| **int8 Quantization** | Cosine **0.999974**, 4× compressão | Erro de reconstrução < 1.4×10⁻⁷ |
+### Pipeline Scout + Factory (Budget de 1.500 LLM calls)
 
-### 1. Upper Bound Pruning
+| Estágio | Calls | Resultado |
+|:---|---:|:---|
+| **SCOUT** (ε=0.7) | 300 | 68 sementes de ataque |
+| **FACTORY** (GS diversity) | 1.200 | ~1.500 unique cells |
+| **Eficiência** | **1.00** cells/call | |
 
-| Cenários | Calls (BFS) | Calls (Madhava) | Economia | Violações |
-|:--------:|:-----------:|:----------------:|:--------:|:---------:|
-| 416 | 416 | **8** | **98%** | **0** ✅ |
-
-O bound Cauchy-Schwarz `B₁(v, H) = ⟨Pv, PH⟩ + e(v)·e(H) ≥ ⟨v, H⟩` garante que **nenhum candidato com potencial de superar o melhor já encontrado é descartado**. Toda poda é matematicamente justificada.
-
-### 2. Scout + Factory Amplification
-
-| Budget | Random | Scout+Factory | Ganho |
-|:-----:|:------:|:-------------:|:-----:|
-| 200 | 84 | **160** | **+91%** |
-| 500 | 85 | **400** | **+371%** |
-| 1000 | 85 | **800** | **+841%** |
-| **1500** | **85** | **1200** | **+1312%** |
-
-O pipeline de dois estágios — **Scout** (ε=0.7, 20% budget) + **Factory** (amplificação combinatorial no espaço de argumentos, 80%) — supera baselines aleatórias em **+1312%** na cobertura de ferramentas únicas (`unique_cells`).
-
-### 3. int8 Quantization
+### int8 Quantization
 
 | Tipo | MSE | Cosine | Compressão |
 |:---|:---:|:---:|:---:|
-| Tool vectors (85D) | 0.0 | 1.0 | 4× |
-| Embeddings (384D) | 1.4×10⁻⁷ | **0.999974** | 4× |
+| Embeddings 384D | 1.4×10⁻⁷ | 0.999974 | 4× (float32 → int8) |
 
 ---
 
 ## Matemática
-
-### Projeção QR-ortogonal (MGS)
-
-```
-P₁ = MGS(𝒩(0,1)³⁸⁴ˣ⁶⁴)   → ‖P₁·P₁ᵀ − I₆₄‖ < 1e-5
-P₂ = MGS(𝒩(0,1)³⁸⁴ˣ¹²⁸)  → ‖P₂·P₂ᵀ − I₁₂₈‖ < 1e-5
-```
 
 ### Cauchy-Schwarz Upper Bound
 
@@ -70,20 +48,13 @@ P₂ = MGS(𝒩(0,1)³⁸⁴ˣ¹²⁸)  → ‖P₂·P₂ᵀ − I₁₂₈‖ <
        = B₁(v, H)                      (Q.E.D.)
 ```
 
-### Modulação (Error Backpropagation)
+Se `B₁(v, H) + ε < best_score` → candidato **não pode matematicamente** superar o melhor já encontrado → PRUNE (0% falso negativo).
 
-```
-α = σ((e₁ − e₂) / μ)
-score = B₁ + α · (B₂ − B₁)
-```
+### Pipeline de Dois Estágios
 
-### Gram-Schmidt Diversity
+**1. SCOUT** (20% do orçamento): ε=0.7 greedy — exploração estocástica para encontrar sementes de ataque.
 
-```
-v_orth = v − Σ_{q∈Q} (v · q̂) · q̂
-```
-
-Priorizar `‖v_orth‖` maximiza cobertura de ferramentas.
+**2. FACTORY** (80% do orçamento): Amplificação combinatorial com Gram-Schmidt no espaço de argumentos (URL, payload, path). Cada variação de argumento = 1 unique_cell no grader.
 
 ---
 
@@ -92,56 +63,19 @@ Priorizar `‖v_orth‖` maximiza cobertura de ferramentas.
 ```
 madhava_sec/
 ├── core.py              # MadhavaSecEngine — projeção QR + bound CS + modulação
-├── attack_families.py   # K=30 centroides KMeans dos embeddings reais
-├── verifier.py          # Verificação híbrida: semântica + gate sintático leve
+├── verifier.py          # Verificação híbrida: semântica + gate sintático 
 ├── search.py            # Beam search + Gram-Schmidt diversity gate
-├── multi_step.py        # Máquina de estados multi-step
 ├── pipeline.py          # Scout + Factory pipeline (2 estágios)
 └── __init__.py
 
 cpp/
-├── madhava_core.h        # Core C++ com SIMD (AVX2+FMA), 28 threads
+├── madhava_core.h        # Core C++ com SIMD (AVX2+FMA)
 ├── madhava_sec_benchmark.cpp
 └── Makefile
 
 kaggle/
 ├── madhava_sec_kaggle_submission.py   # AttackAlgorithm para competição
 └── deploy_madhava_sec_v8.py            # Deploy automático
-```
-
-### C++ Core — 3 Claims Validadas
-
-| Claim | Resultado | 
-|:---|---:|
-| Cauchy-Schwarz Bound | **0 violações** em 85D e 384D |
-| int8 Quantization | Cosine **0.999991**, 4× compressão |
-| MGS Orthogonality | `‖P·Pᵀ − I‖ < 1e-5` (64D e 128D) |
-
----
-
-## API Pública
-
-```python
-from madhava_sec import MadhavaSecEngine, AttackFamilyEngine, FormalVerifier, AttackSearch
-
-# 1. Embedding-derived attack families
-families = AttackFamilyEngine()
-families.build(injection_embeddings)  # KMeans nos dados → K=30 centroides
-
-# 2. Cauchy-Schwarz bound scoring
-engine = MadhavaSecEngine(stage_dims=[64, 128])
-engine.build(tool_vectors)
-scores = engine.estimate_score(query)
-
-# 3. Verificação Híbrida (semântica + gate sintático)
-verifier = FormalVerifier(families, threshold=0.35)
-approved, score = verifier.verify_candidate(prompt_text)
-
-# 4. Scout + Factory Pipeline
-from madhava_sec.pipeline import MadhavaSecPipeline
-pipe = MadhavaSecPipeline(prompts, tool_vectors, labels, tool_list)
-result = pipe.run(total_budget=1500)
-# result["n_unique_cells"] ≈ 1200 (vs 85 do Random)
 ```
 
 ---
@@ -152,7 +86,7 @@ result = pipe.run(total_budget=1500)
 pip install numpy scikit-learn sentence-transformers pandas requests
 
 # Benchmarks (Python)
-PYTHONPATH=".:$PYTHONPATH" python3 benchmarks/madhava_sec_agentharm_benchmark.py
+PYTHONPATH=".:$PYTHONPATH" python3 madhava_sec_agentharm_benchmark.py
 
 # C++ Core
 cd cpp && make && ./madhava_sec_benchmark
@@ -160,12 +94,14 @@ cd cpp && make && ./madhava_sec_benchmark
 
 ---
 
-## Referências
+## Kaggle Competition
 
-- **Madhava BigANN C++** — Zenodo 10.5281/zenodo.21166403 — 0 violações em 254M+ pares
-- **AgentHarm** — ai-safety-institute/AgentHarm — 416 cenários de segurança para agentes de IA
-- **Dasgupta & Gupta** (2003) — Johnson-Lindenstrauss Lemma
-- **Malkov & Yashunin** (2016) — Hierarchical Navigable Small World (HNSW)
+O Madhava-Sec compete em:
+```
+https://www.kaggle.com/competitions/ai-agent-security-multi-step-tool-attacks
+```
+
+Melhor submissão baseada no framework: **V108** (notebook, formato V44 comprovado).
 
 ---
 
