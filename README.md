@@ -1,7 +1,6 @@
 # Madhava-Sec
 
-**Cauchy-Schwarz upper-bound scoring for agent security prompts.**
-*One layer of the Winnex AI security stack.*
+**Cauchy-Schwarz bound based on Winnex Madhava — security layer of the Winnex AI stack.**
 
 [![License: BSL 1.1](https://img.shields.io/badge/License-BSL%201.1-blue)](mailto:pay@winnex.ai)
 [![Zenodo](https://img.shields.io/badge/Zenodo-10.5281%2Fzenodo.21506566-blue)](https://zenodo.org/records/21506566)
@@ -11,18 +10,26 @@
 
 ## What This Is
 
-Madhava-Sec estimates how similar a query prompt is to known attack prompts by computing a **mathematical upper bound** — without calculating the exact dot product.
+Madhava-Sec estimates how similar a query prompt is to known attack prompts by computing a **mathematical upper bound** — without calculating the exact dot product. It is based on **Winnex Madhava**, the core vector search engine of the Winnex AI stack.
 
-It is a **classifier**, not a safety system. It is **one layer** in a security pipeline, not a standalone solution.
+Within the Winnex AI stack, the Cauchy-Schwarz pruning guarantee is used in multiple implementations:
+
+- **Madhava Direct** — vector search (NDCG@10=1.000, 254M+ pairs)
+- **Madhava Cascade** — multi-stage search with streaming rebuild
+- **Madhava-Sec** — security scoring layer (this library)
+- **RAI Agents** — built-in bound verification for enterprise agent decisions
+- **Tracer-Gov** — audit trail with mathematical proof per filtered document
+
+Madhava-Sec is a **classifier**, not a safety system. It is **one layer** in a security pipeline, not a standalone solution.
 
 ```
-Input:  prompt text → embedding (all-MiniLM-L6-v2, 384D)
+Input:  prompt text -> embedding (all-MiniLM-L6-v2, 384D)
         + K centroids trained on your attack data (KMeans/HDBSCAN)
 
 Output: modulated Cauchy-Schwarz bound score per centroid
-        → max(score) = how "attack-like" the prompt is
+        -> max(score) = how "attack-like" the prompt is
 
-Guarantee: bound ≥ true cosine similarity (0% false negatives on embedding)
+Guarantee: bound >= true cosine similarity (0% false negatives on embedding)
 ```
 
 ## What Problem It Solves
