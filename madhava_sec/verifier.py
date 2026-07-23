@@ -116,7 +116,7 @@ class FormalVerifier:
         Returns: threshold float
         """
         if not injection_texts:
-            self._threshold = 0.3
+            self._threshold = None  # MUST be derived from data via derive_threshold()
             return self._threshold
 
         # Embed todos os injection texts
@@ -178,7 +178,7 @@ class FormalVerifier:
         if not text or len(text) < 5:
             return False, 0.0
         score = self.injection_score(text)
-        th = self._threshold if self._threshold is not None else 0.3
+        th = self._threshold if self._threshold is not None else 0.0  # force derive_threshold() call
         approved = score >= th
         return approved, round(score, 4)
 
