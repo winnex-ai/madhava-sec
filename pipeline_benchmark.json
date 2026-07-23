@@ -1,0 +1,202 @@
+{
+  "agent_harm": {
+    "FlatIP": {
+      "R@10": 1.0,
+      "NDCG": 1.0,
+      "AUC": 0.5007,
+      "latency_ms": 0.308,
+      "build_s": 0.002
+    },
+    "HNSW(ef=64)": {
+      "R@10": 0.996,
+      "NDCG": 0.9996,
+      "latency_ms": 0.14,
+      "build_s": 0.182
+    },
+    "HNSW(ef=128)": {
+      "R@10": 1.0,
+      "NDCG": 1.0,
+      "latency_ms": 0.231,
+      "build_s": 0.182
+    },
+    "IVF(np=10)": {
+      "R@10": 0.714,
+      "NDCG": 0.8239,
+      "latency_ms": 0.046
+    },
+    "Madhava_32_64": {
+      "R@10": 0.012,
+      "NDCG": 0.0094,
+      "AUC": 0.6534,
+      "Spearman": 0.0013,
+      "latency_ms": 5.413,
+      "build_s": 0.214,
+      "violations": "0/500000",
+      "flag": "GREEN"
+    },
+    "Madhava_64_128": {
+      "R@10": 0.05,
+      "NDCG": 0.0536,
+      "AUC": 0.7275,
+      "Spearman": 0.0011,
+      "latency_ms": 5.543,
+      "build_s": 0.194,
+      "violations": "0/500000",
+      "flag": "GREEN"
+    }
+  },
+  "random_384d": {
+    "FlatIP": {
+      "R@10": 1.0,
+      "NDCG": 1.0,
+      "AUC": 0.4996,
+      "latency_ms": 0.311,
+      "build_s": 0.002
+    },
+    "HNSW(ef=64)": {
+      "R@10": 0.686,
+      "NDCG": 0.7645,
+      "latency_ms": 0.244,
+      "build_s": 1.119
+    },
+    "HNSW(ef=128)": {
+      "R@10": 0.89,
+      "NDCG": 0.9433,
+      "latency_ms": 0.327,
+      "build_s": 1.096
+    },
+    "IVF(np=10)": {
+      "R@10": 0.22,
+      "NDCG": 0.289,
+      "latency_ms": 0.046
+    },
+    "Madhava_32_64": {
+      "R@10": 0.018,
+      "NDCG": 0.0161,
+      "AUC": 0.6555,
+      "Spearman": 0.0014,
+      "latency_ms": 5.187,
+      "build_s": 0.192,
+      "violations": "0/500000",
+      "flag": "RED"
+    },
+    "Madhava_64_128": {
+      "R@10": 0.09,
+      "NDCG": 0.0817,
+      "AUC": 0.7292,
+      "Spearman": 0.0006,
+      "latency_ms": 5.574,
+      "build_s": 0.193,
+      "violations": "0/500000",
+      "flag": "AMBER"
+    }
+  },
+  "sparse_85d": {
+    "FlatIP": {
+      "R@10": 1.0,
+      "NDCG": 1.0,
+      "AUC": 0.4987,
+      "latency_ms": 0.084,
+      "build_s": 0.0
+    },
+    "HNSW(ef=64)": {
+      "R@10": 0.966,
+      "NDCG": 0.995,
+      "latency_ms": 0.092,
+      "build_s": 0.116
+    },
+    "HNSW(ef=128)": {
+      "R@10": 0.988,
+      "NDCG": 0.9984,
+      "latency_ms": 0.105,
+      "build_s": 0.116
+    },
+    "IVF(np=10)": {
+      "R@10": 0.456,
+      "NDCG": 0.5585,
+      "latency_ms": 0.016
+    },
+    "Madhava_32_64": {
+      "R@10": 0.314,
+      "NDCG": 0.4029,
+      "AUC": 0.8577,
+      "Spearman": 0.0015,
+      "latency_ms": 4.162,
+      "build_s": 0.02,
+      "violations": "0/500000",
+      "flag": "GREEN"
+    }
+  },
+  "arxiv_1536d": {
+    "FlatIP": {
+      "R@10": 1.0,
+      "NDCG": 1.0,
+      "AUC": 0.5011,
+      "latency_ms": 2.347,
+      "build_s": 0.022
+    },
+    "HNSW(ef=64)": {
+      "R@10": 0.68,
+      "NDCG": 0.7516,
+      "latency_ms": 0.445,
+      "build_s": 0.675
+    },
+    "HNSW(ef=128)": {
+      "R@10": 0.838,
+      "NDCG": 0.9059,
+      "latency_ms": 0.718,
+      "build_s": 0.675
+    },
+    "IVF(np=10)": {
+      "R@10": 0.534,
+      "NDCG": 0.5995,
+      "latency_ms": 0.221
+    },
+    "Madhava_32_64": {
+      "R@10": 0.002,
+      "NDCG": 0.0022,
+      "AUC": 0.5444,
+      "Spearman": -0.0051,
+      "latency_ms": 28.131,
+      "build_s": 4.092,
+      "violations": "0/500000",
+      "flag": "GREEN"
+    },
+    "Madhava_64_128": {
+      "R@10": 0.004,
+      "NDCG": 0.0028,
+      "AUC": 0.5621,
+      "Spearman": -0.0051,
+      "latency_ms": 28.051,
+      "build_s": 1.899,
+      "violations": "0/500000",
+      "flag": "GREEN"
+    }
+  },
+  "arxiv_pca50": {
+    "FlatIP": {
+      "R@10": 1.0,
+      "NDCG": 1.0,
+      "AUC": 0.5006,
+      "latency_ms": 0.077,
+      "build_s": 0.0
+    },
+    "HNSW(ef=64)": {
+      "R@10": 0.938,
+      "NDCG": 0.9647,
+      "latency_ms": 0.04,
+      "build_s": 0.064
+    },
+    "HNSW(ef=128)": {
+      "R@10": 0.986,
+      "NDCG": 0.9943,
+      "latency_ms": 0.071,
+      "build_s": 0.065
+    },
+    "IVF(np=10)": {
+      "R@10": 0.714,
+      "NDCG": 0.8414,
+      "latency_ms": 0.013
+    }
+  }
+}
