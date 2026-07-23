@@ -1,118 +1,126 @@
 """
-semantic.py — SafetyEnsemble v1.0
+semantic.py — SafetyEnsemble v2.0
 ==================================
-Multi-embedder ensemble for semantic safety detection.
+Multi-embedder ensemble with weighted consensus and batch embedding cache.
 
-Resolves the GIGO problem: instead of relying on a SINGLE embedding model
-(all-MiniLM-L6-v2), SafetyEnsemble uses MULTIPLE embedders and only flags
-a prompt as safe if ALL models agree.
+Fixes v1.x limitations:
+  - Performance: batch embedding cache (embed once per model, reuse)
+  - Consensus: weighted by calibration F1, not simple binary agreement
+  - Confidence: calibrated score, not just safe/unsafe boolean
 
 Embedders:
   - all-MiniLM-L6-v2 (384D, default, fast)
-  - BGE-small-en-v1.5 (384D, better on retrieval)
-  - e5-small-v2 (384D, better on classification)
-
-If any embedder disagrees, the prompt is escalated to LLM judge.
-This eliminates the "false sense of security" from single-embedder GIGO.
+  - BAAI/bge-small-en-v1.5 (384D, better on retrieval)
+  - intfloat/e5-small-v2 (384D, better on classification)
 """
 
-import numpy as np
-import warnings
+import time, numpy as np
 
 EMBEDDER_NAMES = ["all-MiniLM-L6-v2", "BAAI/bge-small-en-v1.5", "intfloat/e5-small-v2"]
 
 
 class SafetyEnsemble:
     """
-    Multi-embedder safety classification.
+    Multi-embedder safety classification with weighted consensus.
+
+    Key improvements over v1:
+      embed(texts):           embeds ALL texts at once, caches results
+      evaluate(text):         weighted consensus from calibration F1
+      calibrate(attacks, bening): computes per-model F1 for weighting
 
     Usage:
       ensemble = SafetyEnsemble()
-      ensemble.build(attack_embeddings_dict)  # dict: embedder_name -> (centroids, engine)
+      ensemble.build(attack_texts)
+      ensemble.calibrate(attack_texts, clean_texts)  # sets weights
       result = ensemble.evaluate(prompt_text)
-      → {"safe": True/False, "scores": {...}, "agreement": 1.0}
+      → {"safe": 0.92, "verdict": "safe", "confidences": {...}}
     """
 
-    def __init__(self, model_names=None):
+    def __init__(self, model_names=None, cache_dir=None):
         self.model_names = model_names or EMBEDDER_NAMES
         self._embedders = {}
-        self._engines = {}      # embedder_name -> MadhavaSecEngine
-        self._centroids = {}    # embedder_name -> centroids
-        self._thresholds = {}   # embedder_name -> threshold
+        self._engines = {}       # embedder_name -> MadhavaSecEngine
+        self._centroids = {}     # embedder_name -> centroids
+        self._thresholds = {}    # embedder_name -> threshold
+        self._weights = {}       # embedder_name -> calibration weight
+        self._cache = {}         # model_name -> {texts_hash: embeddings}
         self._built = False
+        self._calibrated = False
+
+    # ─────────────── Batch Embedding Cache ───────────────
 
     def _get_embedder(self, name):
-        """Lazy-load sentence transformer model."""
         if name not in self._embedders:
             from sentence_transformers import SentenceTransformer
             try:
                 self._embedders[name] = SentenceTransformer(name, device="cpu")
             except Exception:
-                # Fallback: use MiniLM if model not available
                 if name != "all-MiniLM-L6-v2":
                     print(f"  [SafetyEnsemble] {name} not available, falling back to MiniLM")
-                    from sentence_transformers import SentenceTransformer
                     self._embedders[name] = SentenceTransformer("all-MiniLM-L6-v2", device="cpu")
                 else:
                     raise
         return self._embedders[name]
 
-    def embed(self, texts: list, model_name: str = None) -> np.ndarray:
-        """Embed texts with specific model."""
+    def embed(self, texts, model_name=None):
+        """Embed ALL texts at once. Caches per model."""
         mn = model_name or self.model_names[0]
-        emb = self._get_embedder(mn).encode(
-            texts, normalize_embeddings=True,
-            show_progress_bar=False, batch_size=64
-        ).astype(np.float32)
-        return emb
+        if mn not in self._cache:
+            self._cache[mn] = {}
+        key = str(hash(tuple(texts[:10])))  # simple content hash key
+        if key not in self._cache[mn]:
+            emb = self._get_embedder(mn).encode(
+                texts, normalize_embeddings=True,
+                show_progress_bar=False, batch_size=128
+            ).astype(np.float32)
+            self._cache[mn][key] = emb
+        return self._cache[mn][key]
 
-    def build(self, attack_texts: list, clean_texts: list = None,
-              centroids_dict: dict = None):
+    # ─────────────── Build ───────────────
+
+    def build(self, attack_texts, clean_texts=None, centroids_dict=None,
+              embed_all=False):
         """
         Build ensemble: load/train centroids per embedder.
 
-        Args:
-          attack_texts: list of attack prompt strings
-          clean_texts: optional list of benign prompts (for threshold calibration)
-          centroids_dict: optional pre-computed centroids {embedder_name: np.ndarray}
+        If embed_all=True, embeds all attack texts at once per model (faster).
         """
         from sklearn.cluster import KMeans
 
         for mn in self.model_names:
             print(f"  [SafetyEnsemble] Loading {mn}...")
+            t0 = time.time()
 
             if centroids_dict and mn in centroids_dict:
                 centroids = centroids_dict[mn]
             else:
-                # Embed attack texts with this model
-                embs = self.embed(attack_texts, mn)
-                # KMeans -> centroids
-                K = max(2, min(30, len(embs) // 10))
-                km = KMeans(n_clusters=K, random_state=42, n_init=3).fit(embs)
+                if embed_all:
+                    attack_embs = self.embed(attack_texts, mn)
+                else:
+                    attack_embs = self.embed(attack_texts[:min(1000, len(attack_texts))], mn)
+                K = max(2, min(30, len(attack_embs) // 10))
+                km = KMeans(n_clusters=K, random_state=42, n_init=3).fit(attack_embs)
                 centroids = km.cluster_centers_.astype(np.float32)
                 cn = np.linalg.norm(centroids, axis=1, keepdims=True)
-                cn[cn == 0] = 1.0
-                centroids /= cn
+                cn[cn == 0] = 1.0; centroids /= cn
 
             self._centroids[mn] = centroids
 
-            # Build Madhava-Sec engine for this embedder
             from .core import MadhavaSecEngine
             engine = MadhavaSecEngine(stage_dims=[64, 128]).build(centroids)
             self._engines[mn] = engine
 
-            # Compute threshold from data
             attack_scores = self._score_texts(attack_texts[:min(500, len(attack_texts))], mn)
-            th = float(np.percentile(attack_scores, 10))  # 10th percentile
+            th = float(np.percentile(attack_scores, 10))
             self._thresholds[mn] = th
 
-            print(f"    centroids={centroids.shape[0]}, threshold={th:.4f}")
+            print(f"    centroids={centroids.shape[0]}, threshold={th:.4f} ({time.time()-t0:.1f}s)")
 
         self._built = True
         return self
 
-    def _score_texts(self, texts: list, model_name: str) -> np.ndarray:
-        """Score a list of texts using a specific embedder's engine."""
+    def _score_texts(self, texts, model_name):
+        """Batch score texts using cached embeddings."""
         embs = self.embed(texts, model_name)
         scores = np.zeros(len(texts))
         for i in range(len(texts)):
@@ -120,61 +128,123 @@ class SafetyEnsemble:
             scores[i] = max(s.values())
         return scores
 
-    def evaluate(self, text: str) -> dict:
+    # ─────────────── Weighted Calibration ───────────────
+
+    def calibrate(self, attack_texts, clean_texts):
         """
-        Evaluate a single text using ALL embedders.
+        Compute per-model F1 weights from calibration data.
+
+        Models that perform better on the calibration set get higher weight
+        in the consensus decision.
+
+        Weight formula:
+          w_i = F1_i / sum(F1_all)
+
+        This ensures a model that systematically fails on certain attack
+        types has proportionally less influence on the final verdict.
+        """
+        from sklearn.metrics import f1_score
+
+        for mn in self.model_names:
+            # Score attack texts
+            attack_scores = self._score_texts(attack_texts[:min(500, len(attack_texts))], mn)
+            # Score clean texts
+            clean_scores = self._score_texts(clean_texts[:min(500, len(clean_texts))], mn)
+
+            all_scores = np.concatenate([attack_scores, clean_scores])
+            all_labels = np.array([1]*len(attack_scores) + [0]*len(clean_scores))
+
+            # Best threshold for this model
+            best_f1 = 0.0
+            for th in np.linspace(all_scores.min(), all_scores.max(), 200):
+                pred = (all_scores >= th).astype(np.int32)
+                f1 = f1_score(all_labels, pred, zero_division=0)
+                if f1 > best_f1:
+                    best_f1 = f1
+
+            self._weights[mn] = best_f1
+            print(f"  [Calibration] {mn}: F1={best_f1:.4f}")
+
+        # Normalize weights to sum to 1
+        total = sum(self._weights.values())
+        if total > 0:
+            for mn in self._weights:
+                self._weights[mn] /= total
+        else:
+            equal = 1.0 / max(len(self._weights), 1)
+            for mn in self._weights:
+                self._weights[mn] = equal
+
+        self._calibrated = True
+        return self
+
+    # ─────────────── Evaluation ───────────────
+
+    def evaluate(self, text):
+        """
+        Evaluate with weighted consensus.
 
         Returns:
           {
-            "safe": bool (True if ALL embedders agree safe),
-            "scores": {embedder_name: float},
-            "thresholds": {embedder_name: float},
-            "agreement": float (fraction of embedders agreeing),
-            "details": str
+            "safe": float (0-1, calibrated confidence that it's safe),
+            "verdict": "safe" / "flagged" / "uncertain",
+            "confidences": {embedder_name: {"score": float, "flagged": bool}},
+            "weighted_score": float,
+            "agreement": float,
           }
         """
         if not self._built:
-            return {"safe": False, "error": "Call build() first"}
+            return {"safe": 0.0, "verdict": "uncertain", "error": "Call build() first"}
 
-        scores = {}
-        decisions = []
+        # Use default weights if not calibrated
+        if not self._calibrated:
+            equal = 1.0 / max(len(self.model_names), 1)
+            for mn in self.model_names:
+                self._weights[mn] = equal
+
+        confidences = {}
+        weighted_flagged = 0.0
+        weighted_total = 0.0
+
         for mn in self.model_names:
             emb = self.embed([text], mn)[0]
             s = self._engines[mn].estimate_score(emb)
             max_score = max(s.values())
             th = self._thresholds.get(mn, 0.3)
-            scores[mn] = round(float(max_score), 4)
-            decisions.append(max_score >= th)
+            flagged = max_score >= th
+            w = self._weights.get(mn, 1.0 / max(len(self.model_names), 1))
+            confidences[mn] = {"score": round(float(max_score), 4), "flagged": bool(flagged)}
+            if flagged:
+                weighted_flagged += w
+            weighted_total += w
 
-        n_safe = sum(1 for d in decisions if not d)
-        n_unsafe = sum(1 for d in decisions if d)
-        agreement = max(n_safe, n_unsafe) / max(len(decisions), 1)
+        safe_confidence = 1.0 - weighted_flagged  # 0 = unsafe, 1 = safe
 
-        # Safe = ALL embedders agree the score is below threshold
-        all_safe = all(not d for d in decisions)
-        any_unsafe = any(d for d in decisions)
+        if safe_confidence >= 0.8:
+            verdict = "safe"
+        elif safe_confidence >= 0.5:
+            verdict = "uncertain"
+        else:
+            verdict = "flagged"
 
         return {
-            "safe": all_safe,
-            "any_flagged": any_unsafe,
-            "scores": scores,
-            "thresholds": {mn: round(self._thresholds.get(mn, 0.3), 4) for mn in self.model_names},
-            "agreement": round(agreement, 3),
-            "verdict": "safe" if all_safe else "flagged" if any_unsafe else "unknown",
-            "details": f"{n_safe}/{len(decisions)} embedders agree safe" if all_safe else (
-                f"{n_unsafe}/{len(decisions)} embedders flagged — escalate to LLM"
-            )
+            "safe": round(safe_confidence, 3),
+            "verdict": verdict,
+            "confidences": confidences,
+            "weighted_score": round(weighted_flagged, 3),
+            "agreement": round(1.0 - abs(weighted_flagged - 0.5) * 2, 3),
         }
 
-    def evaluate_batch(self, texts: list) -> list:
-        """Evaluate a batch of texts. Returns list of dicts."""
+    def evaluate_batch(self, texts):
         return [self.evaluate(t) for t in texts]
 
-    def stats(self) -> dict:
+    def stats(self):
         return {
             "n_embedders": len(self.model_names),
             "model_names": self.model_names,
             "built": self._built,
-            "centroids_shapes": {mn: c.shape for mn, c in self._centroids.items()},
+            "calibrated": self._calibrated,
+            "weights": {mn: round(w, 4) for mn, w in self._weights.items()},
             "thresholds": self._thresholds,
+            "centroids_shapes": {mn: c.shape for mn, c in self._centroids.items()},
         }
