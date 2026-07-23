@@ -5,7 +5,7 @@ que baixa o AgentHarm e executa todas as metricas.
 """
 import os, json, base64, time
 
-KAGGLE_TOKEN = "KGAT_0eff3a8a6f8c19b3485385571867bb8f"
+KAGGLE_TOKEN = os.environ.get("KAGGLE_TOKEN", "YOUR_TOKEN_HERE")
 
 # Codigo do benchmark inline (b64 no notebook)
 benchmark_code = r'''
