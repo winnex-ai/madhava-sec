@@ -390,3 +390,29 @@ scores, profile = engine.estimate_score(query_emb, return_profile=True)
 violations, total = engine.check_bounds(query_emb)
 # -> {"32D": 0, "128D": 0}, 416
 ```
+
+
+## Complete Benchmark
+
+6 datasets, 50 queries each, auto-configured dims, 0% violations across all.
+
+### Regime & Pruning
+
+| Dataset | Flag | D_int | Config | Energy | Pred Prune | Actual Prune | RAM | Viol |
+|---------|:----:|:-----:|:------:|:------:|:----------:|:------------:|:---:|:----:|
+| agent_harm (structured) | 🔴 RED | 24/384 | 128->256 | 18.3% | 0.0% | 0.0% | 31MB | 0% |
+| random_384d (isotropic) | 🔴 RED | 377/384 | 128->256 | 18.4% | 0.0% | 0.0% | 31MB | 0% |
+| random_128d | 🟡 AMBER | 127/128 | 64->128 | 29.4% | 99.2% | 0.5% | 13MB | 0% |
+| arxiv_1536d | 🔴 RED | 7/1536 | 512->1536 | 17.1% | 0.0% | 0.0% | 156MB | 0% |
+| arxiv_pca50 | 🔴 RED | 41/50 | 16->32 | 17.1% | 56.0% | 2.1% | 4MB | 0% |
+| sparse_85d (tools) | 🟡 AMBER | 66/85 | 32->64 | 20.7% | 91.0% | 0.1% | 7MB | 0% |
+
+**0% bound violations** across all datasets (verified 300K+ pairs).
+
+### Cache Scale (ArXiv 1536D)
+
+| N | RAM (MB) | RAM Build (ms) | Cache (MB) | Cache Build (ms) | Query (ms) |
+|:-:|:--------:|:--------------:|:----------:|:----------------:|:----------:|
+| 10,000 | 68.9 | 1856.6 | 65.8 | 1892.1 | 0.51 |
+
+For complete results: `complete_benchmark.json`
