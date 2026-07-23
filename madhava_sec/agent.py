@@ -146,16 +146,16 @@ class AgentSecurityFramework:
         safety = self.safety.evaluate(query_text) if self.safety else {"safe": False}
 
         # 4. Decision
-        if safety.get("safe"):
+        if safety.get("verdict") == "safe" and safety.get("safe", 0) >= 0.8:
             if madhava_score < self.madhava_threshold:
                 action = "allow"
             else:
-                action = "allow"  # Madhava flagged but safety says safe → overridden
-        elif safety.get("any_flagged"):
+                action = "allow"  # safety overrides Madhava
+        elif safety.get("verdict") == "flagged":
             action = "escalate"
             self.escalation_count += 1
         else:
-            action = "allow"  # conservative default
+            action = "allow"  # uncertain → conservative: allow
 
         result = {
             "action": action,
