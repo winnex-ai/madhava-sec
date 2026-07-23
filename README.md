@@ -233,6 +233,10 @@ Commercial use: pay@winnex.ai
 
 Change Date: 2036-01-01 (converts to GPL v2.0+)
 
+## PiPrime Integration
+
+See [`PIPRIME_INTEGRATION.md`](PIPRIME_INTEGRATION.md) for how Madhava-Sec integrates with π-based cognitive navigation strategies — PiPrime explores, Madhava-Sec guarantees.
+
 ## References
 
 1. **Madhava Cascade** (2026). Zenodo 10.5281/zenodo.21500959 — 0 violations in 254M+ pairs
