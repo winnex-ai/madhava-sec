@@ -416,3 +416,12 @@ violations, total = engine.check_bounds(query_emb)
 | 10,000 | 68.9 | 1856.6 | 65.8 | 1892.1 | 0.51 |
 
 For complete results: `complete_benchmark.json`
+
+
+## Enterprise Licensing
+
+See [`ENTERPRISE_LICENSING.md`](ENTERPRISE_LICENSING.md) for commercial licensing, ROI calculations, and support tiers.
+
+---
+
+*BSL 1.1 | pay@winnex.ai*
