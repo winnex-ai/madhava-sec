@@ -1,0 +1,52 @@
+{
+  "dataset": "HF Prompt Injections (AgentHarm)",
+  "n_test": 2320,
+  "n_attacks": 998,
+  "pricing_basis": "500 input + 100 output tokens per LLM call",
+  "scenarios": [
+    {
+      "name": "A \u2014 No filter",
+      "llm_calls": 2320,
+      "reduction_pct": 0.0,
+      "recall_pct": 100.0
+    },
+    {
+      "name": "B \u2014 Youden threshold",
+      "llm_calls": 1141,
+      "reduction_pct": 50.8,
+      "recall_pct": 87.5,
+      "gpt4o_mini_baseline": 0.3132,
+      "gpt4o_mini_with_madhava": 0.1772,
+      "savings_pct": 43.4,
+      "claude_cost_baseline": 6.96,
+      "claude_with_madhava": 3.45,
+      "claude_savings_pct": 50.5
+    },
+    {
+      "name": "C \u2014 Conservative",
+      "llm_calls": 1972,
+      "reduction_pct": 15.0,
+      "recall_pct": 99.2,
+      "gpt4o_mini_baseline": 0.3132,
+      "gpt4o_mini_with_madhava": 0.2894,
+      "savings_pct": 7.6
+    },
+    {
+      "name": "D \u2014 Aggressive",
+      "llm_calls": 1276,
+      "reduction_pct": 45.0,
+      "recall_pct": 92.0,
+      "gpt4o_mini_baseline": 0.3132,
+      "gpt4o_mini_with_madhava": 0.1955,
+      "savings_pct": 37.6
+    }
+  ],
+  "summary": {
+    "best_reduction": 50.8,
+    "best_recall": 99.2,
+    "best_savings_gpt4o_mini": 43.4,
+    "best_savings_claude": 50.5,
+    "bound_violations": 0,
+    "note": "98% figure previously cited referred to AgentHarm 416-to-8 candidate pruning in the Honesto benchmark. Real AgentHarm production benchmark with 2,320 samples shows 43-51% LLM cost reduction with 87.5% recall."
+  }
+}
