@@ -292,61 +292,53 @@ class MadhavaSecEngine:
         return 1.0 / (1.0 + np.exp(-(e1 - e2) / mu * 0.5))
 
     def estimate_score(self, query_vec, return_profile=False):
+        """
+        Score estimation following Honesto benchmark pattern (Zenodo 10.5281/zenodo.21506566).
+
+        Computes bounds on ALL candidates in two stages (no pruning), then
+        returns modulated score per candidate. Matches ScoreMadhava from
+        madhava_sec_benchmark_honest_v5.py:167-189.
+
+        Args:
+          query_vec: float32 array, shape (full_dim,) or (1, full_dim)
+          return_profile: if True, return (scores, profile)
+
+        Returns:
+          scores: dict {idx: modulated_score} for ALL candidates
+          profile: optional dict with diagnostics
+        """
         q = query_vec.astype(np.float32).flatten()
         qn = max(np.linalg.norm(q), 1e-10)
-        prof = {"n_total": self.n_attacks, "d_int": self.d_int,
-                "dims": list(self.dims)}
-
         d1, d2 = self.dims[0], self.dims[-1]
+        mu = max(np.mean(self.error_f32[d1]), 1e-9)
 
-        # Stage 1
+        # Stage 1: project on d1 (all candidates)
         q1 = q @ self.proj_mat[d1].T
         qr1 = math.sqrt(max(0, qn ** 2 - np.linalg.norm(q1) ** 2))
         B1 = self._upper_bound(self.proj_f32[d1], self.error_f32[d1], q1, qr1)
 
-        keep1 = min(max(int(self.n_attacks * self.keep_ratio), 50),
-                    self.max_candidates, self.n_attacks)
-        idx1 = (np.arange(self.n_attacks) if self.n_attacks <= keep1
-                else np.argpartition(-B1, max(0, keep1 - 1))[:keep1])
-
-        # Stage 2
+        # Stage 2: project on d2 (all candidates)
         q2 = q @ self.proj_mat[d2].T
         qr2 = math.sqrt(max(0, qn ** 2 - np.linalg.norm(q2) ** 2))
-        B2 = self._upper_bound(self.proj_f32[d2][idx1], self.error_f32[d2][idx1],
-                               q2, qr2)
+        B2 = self._upper_bound(self.proj_f32[d2], self.error_f32[d2], q2, qr2)
 
-        e1s, e2s = self.error_f32[d1][idx1], self.error_f32[d2][idx1]
-        imp = max(np.mean(e1s), 1e-9) / max(np.mean(e2s), 1e-9)
+        # Error backpropagation modulation (Honesto Eq)
+        delta_e = (self.error_f32[d1] - self.error_f32[d2]) / mu
+        alpha = np.clip(1.0 / (1.0 + np.exp(-delta_e * 0.5)), 0.01, 0.99)
+        modulated = B1 + alpha * (B2 - B1)
 
-        if imp < 1.2:
-            scores = B1[idx1]
-        elif imp < 2.0:
-            a = self._modulation_alpha(e1s, e2s) * (imp - 1.2) / 0.8
-            scores = B1[idx1] + a * (B2 - B1[idx1])
-        else:
-            a = self._modulation_alpha(e1s, e2s)
-            scores = B1[idx1] + a * (B2 - B1[idx1])
-
-        keep2 = max(self.final_topk, min(200, len(idx1)))
-        idx2 = idx1[np.argpartition(-scores, max(0, keep2 - 1))[:keep2]]
-
-        exact = self.attack_vectors[idx2] @ q
-        nv = np.maximum(np.linalg.norm(self.attack_vectors[idx2], axis=1), 1e-10)
-        exact_norm = exact / (nv * qn)
-
-        result = {int(i): float(s) for i, s in zip(idx2, exact_norm)}
-
-        # Confidence levels
-        if len(idx2) > 0:
-            best = float(exact_norm.max())
-            margins = [float(s) - best for s in exact_norm]
-            prof["confidence_levels"] = {
-                "confident": sum(1 for m in margins if m > 0.3),
-                "borderline": sum(1 for m in margins if 0.1 < m <= 0.3),
-                "uncertain": sum(1 for m in margins if m <= 0.1),
-            }
+        result = {int(i): float(modulated[i]) for i in range(self.n_attacks)}
 
         if return_profile:
+            prof = {
+                "n_total": self.n_attacks,
+                "d_int": self.d_int,
+                "dims": list(self.dims),
+                "B1_range": [float(B1.min()), float(B1.max())],
+                "B2_range": [float(B2.min()), float(B2.max())],
+                "modulated_range": [float(modulated.min()), float(modulated.max())],
+                "alpha_mean": float(np.mean(alpha)),
+            }
             return result, prof
         return result
 
