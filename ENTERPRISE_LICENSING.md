@@ -29,19 +29,20 @@ Madhava-Sec is released under the **Business Source License 1.1 (BSL 1.1)**.
 In agent security, every candidate prompt must be evaluated against an LLM. The cost is:
 
 ```
-N = number of attack candidates (e.g., 416 AgentHarm behaviors)
-K = budget for LLM evaluations (e.g., 8 calls)
+N = total prompts per day
+t = fraction escalated to LLM (default: ~50% at Youden threshold)
 
 Without Madhava-Sec:
-  Cost = N × LLM_call_cost × seconds_per_call
+  Cost = N × LLM_call_cost
   
-  Example: 416 candidates × $0.01/call × 2s = $8.32 per query session
+  Example (N=10,000, GPT-4o-mini): 10,000 × $0.000135 = $1.35/day
   
 With Madhava-Sec:
-  Cost = K × LLM_call_cost × seconds_per_call
+  Cost = N × t × LLM_call_cost + Madhava_CPU_cost
   
-  Example: 8 candidates × $0.01/call × 2s = $0.16 per query session
-  Savings: 98.1%
+  Example (N=10,000, t=0.492, GPT-4o-mini):
+    10,000 × 0.492 × $0.000135 + $0.10 = $0.76/day
+  Savings: ~49%
 ```
 
 ### The ROI Calculation
@@ -93,7 +94,7 @@ At a savings rate of $49.20/day, the Startup tier pays for itself in ~3 months.
 
 | Vertical | Application | Typical Savings |
 |:---------|:------------|:---------------:|
-| **Security** | LLM prompt injection detection | 92-98% reduction in LLM calls |
+| **Security** | LLM prompt injection detection | ~50% reduction in LLM calls (Youden threshold) |
 | **Legal** | Contract clause retrieval + review | 95% reduction in document review cost |
 | **Healthcare** | HIPAA-compliant patient data retrieval | 99% reduction in false positives |
 | **Finance** | Regulatory compliance search (SOX, GDPR) | 90% reduction in audit overhead |
