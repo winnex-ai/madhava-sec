@@ -10,7 +10,35 @@
 
 ---
 
-## Benchmarks (Real Data Only)
+## Benchmarks (Real Data Only — 4 Datasets)
+
+### Classification — 5-Fold Cross Validation
+
+| Dataset | N | D_int | F1 Direct | F1 Madhava | Spearman | Retention | Bound Viol. |
+|:--------|:-:|:-----:|:---------:|:----------:|:--------:|:---------:|:-----------:|
+| **HF Prompt Injections** (AgentHarm) | 11,598 | 146 | 0.7111 | **0.6962** | **0.960** | **97.9%** | **0/69,600** |
+| **AgentHarm Behaviors** (JSON) | 352 | 52 | 0.4667 | **0.4743** | **0.972** | **101.6%** | **0/2,714** |
+| **OTX Threat Pulses** | 1,200 | 55 | 0.6933 | **0.6716** | **0.946** | **96.9%** | **0/7,200** |
+| **OTX AI Agent Threats** | 1,610 | 61 | 0.3079 | **0.3079** | **0.989** | **100.0%** | **0/9,660** |
+
+**Across all datasets: 0 bound violations, >0.94 Spearman, >96.9% retention.**
+
+### Full Pipeline — AgentSecurityFramework (HF Injections, 2,320 test samples)
+
+| Metric | Value |
+|:-------|:-----:|
+| Recall (attacks found) | **75.76%** |
+| Specificity (benign allowed) | **84.16%** |
+| F1 | **0.7895** |
+| Escalation rate | 45.5% |
+
+### PiPrime Navigation (AgentHarm, 11,598 embeddings)
+
+| K | Latency | Orthogonality Error |
+|:-:|:-------:|:-------------------:|
+| 8 | 0.27ms | 2.38 × 10⁻⁷ |
+| 16 | 0.94ms | 2.98 × 10⁻⁷ |
+| 32 | 3.43ms | 2.98 × 10⁻⁷ |
 
 **Dataset:** AgentHarm (ai-safety-institute/AgentHarm) — 11,598 real samples, 4,987 attacks, 6,611 benign.
 **Embedding:** all-MiniLM-L6-v2 (384D).
