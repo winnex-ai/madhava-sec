@@ -112,6 +112,56 @@ PIPRIME_INTEGRATION.md → π-based navigation integration
 ENTERPRISE_LICENSING.md → BSL 1.1, ROI: 98% LLM reduction
 ```
 
+## Target Audience & Prerequisites
+
+**Madhava-Sec is NOT for everyone.** Before using it, ensure:
+
+### 1. You have labeled attack data
+Madhava-Sec requires K centroids trained via KMeans on REAL attack embeddings.
+Without representative attack data, the centroids will not capture meaningful
+attack patterns. The bound will still hold (0% violations), but the classification
+will be useless (Garbage In, Garbage Out).
+
+### 2. You DO NOT expect jailbreak detection
+Madhava-Sec measures **embedding cosine similarity**, not semantic harmfulness.
+Sophisticated jailbreaks that bypass embedding models (all-MiniLM-L6-v2) will
+NOT be detected. The bound will produce 0% violations — and 100% wrong safety
+judgment. This is mathematically guaranteed.
+
+### 3. You are building a PIPELINE, not a final solution
+Madhava-Sec is one layer in a security stack:
+- **PiPrime** (π-based) explores the search space
+- **Madhava-Sec** scores candidates with a mathematical guarantee
+- **LLM judge** makes the final safety decision
+
+Using Madhava-Sec alone as a "security solution" is incorrect and dangerous.
+
+## Tests
+
+Run the full test suite (14 tests, synthetic data only, no external datasets):
+
+```bash
+cd madhava-sec
+python3 -m pytest tests/ -v
+```
+
+```
+test_bound_holds_for_all_vectors        ✅ 0% violations guaranteed
+test_bound_holds_at_scale               ✅ 100 queries × 5000 vectors
+test_bound_holds_different_dims         ✅ [32,64], [64,128], [16,32]
+test_score_shape                        ✅ returns N scores
+test_deterministic                      ✅ same input → same output
+test_structured_data_is_green           ✅ regime check GREEN
+test_random_data_is_not_green           ✅ regime check correctly RED
+test_message_present                    ✅ explanations exist
+test_structured_low_dim                 ✅ D_int < 50
+test_random_high_dim                    ✅ D_int > 100
+test_returns_config                     ✅ auto_configure works
+test_config_builds                      ✅ auto-configured dims build
+test_classifies_faster_than_exact       ✅ Madhava completes
+test_cache_build_and_search             ✅ mmap cache works
+```
+
 ## References
 
 1. **Madhava-Sec Zenodo** (2026). 10.5281/zenodo.21506566
