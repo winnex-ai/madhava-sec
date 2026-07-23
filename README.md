@@ -1,9 +1,16 @@
 # Madhava-Sec
 
-**Mathematically Guaranteed Agent Security Scoring**
+**⚠️  WARNING: This is a SCORING AID, not a safety guarantee.**
 
-Cauchy-Schwarz upper-bound for deterministic prompt/tool scoring.
-Zero regex. Zero hardcoded patterns. Zero fallbacks.
+Mathematical guarantee refers to **embedding cosine similarity**, not semantic
+harmfulness. If the embedding model misses a jailbreak nuance, Madhava-Sec
+will prune with 0% bound violations — and 100% wrong safety judgment.
+
+See [Limitations: Math ≠ Semantic Guarantee](#2-mathematical-guarantee-≠-semantic-guarantee).
+
+---
+
+## What It Does
 
 [![License: BSL 1.1](https://img.shields.io/badge/License-BSL%201.1-blue)](mailto:pay@winnex.ai)
 
