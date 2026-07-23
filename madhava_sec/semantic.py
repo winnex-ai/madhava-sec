@@ -79,16 +79,18 @@ class SafetyEnsemble:
     # ─────────────── Build ───────────────
 
     def build(self, attack_texts, clean_texts=None, centroids_dict=None,
-              embed_all=False):
+              embed_all=False, cluster_method="auto"):
         """
         Build ensemble: load/train centroids per embedder.
 
-        If embed_all=True, embeds all attack texts at once per model (faster).
+        Args:
+          cluster_method:
+            "kmeans" — hard spherical clusters (fast, K fixed)
+            "hdbscan" — density-based, detects noise points, variable K
+            "auto" — try HDBSCAN first, fallback to KMeans if no clusters found
         """
-        from sklearn.cluster import KMeans
-
         for mn in self.model_names:
-            print(f"  [SafetyEnsemble] Loading {mn}...")
+            print(f"  [SafetyEnsemble] Loading {mn} (method={cluster_method})...")
             t0 = time.time()
 
             if centroids_dict and mn in centroids_dict:
@@ -97,12 +99,9 @@ class SafetyEnsemble:
                 if embed_all:
                     attack_embs = self.embed(attack_texts, mn)
                 else:
-                    attack_embs = self.embed(attack_texts[:min(1000, len(attack_texts))], mn)
-                K = max(2, min(30, len(attack_embs) // 10))
-                km = KMeans(n_clusters=K, random_state=42, n_init=3).fit(attack_embs)
-                centroids = km.cluster_centers_.astype(np.float32)
-                cn = np.linalg.norm(centroids, axis=1, keepdims=True)
-                cn[cn == 0] = 1.0; centroids /= cn
+                    attack_embs = self.embed(attack_texts[:min(2000, len(attack_texts))], mn)
+
+                centroids = self._compute_centroids(attack_embs, method=cluster_method)
 
             self._centroids[mn] = centroids
 
@@ -111,13 +110,76 @@ class SafetyEnsemble:
             self._engines[mn] = engine
 
             attack_scores = self._score_texts(attack_texts[:min(500, len(attack_texts))], mn)
-            th = float(np.percentile(attack_scores, 10))
-            self._thresholds[mn] = th
+            # Youden's J threshold (maximizes TPR - FPR)
+            from sklearn.metrics import roc_curve
+            if clean_texts:
+                clean_scores = self._score_texts(clean_texts[:min(500, len(clean_texts))], mn)
+                all_s = np.concatenate([attack_scores, clean_scores])
+                all_l = np.array([1]*len(attack_scores) + [0]*len(clean_scores))
+                fpr, tpr, thr = roc_curve(all_l, all_s)
+                youden = tpr - fpr
+                th = float(thr[np.argmax(youden)])
+            else:
+                th = float(np.percentile(attack_scores, 10))
 
+            self._thresholds[mn] = th
             print(f"    centroids={centroids.shape[0]}, threshold={th:.4f} ({time.time()-t0:.1f}s)")
 
         self._built = True
         return self
+
+    def _compute_centroids(self, embeddings, method="auto"):
+        """
+        Compute centroids from attack embeddings.
+
+        Supports:
+          - kmeans: fixed K, spherical clusters
+          - hdbscan: density-based, detects noise, irregular shapes
+          - auto: HDBSCAN with KMeans fallback
+        """
+        embs = embeddings.astype(np.float32)
+
+        if method in ("hdbscan", "auto"):
+            try:
+                import hdbscan
+                clusterer = hdbscan.HDBSCAN(min_cluster_size=max(3, len(embs)//100),
+                                             min_samples=1, metric="euclidean",
+                                             gen_min_span_tree=False, core_dist_n_jobs=1)
+                labels = clusterer.fit_predict(embs)
+                n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
+
+                if n_clusters >= 2:
+                    # Centroids = mean of each cluster (excluding noise label -1)
+                    centroids = []
+                    for cid in range(n_clusters):
+                        mask = labels == cid
+                        if mask.sum() > 0:
+                            centroids.append(embs[mask].mean(axis=0))
+                    centroids = np.array(centroids, dtype=np.float32)
+                    # Normalize
+                    cn = np.linalg.norm(centroids, axis=1, keepdims=True)
+                    cn[cn == 0] = 1.0
+                    centroids /= cn
+                    print(f"      HDBSCAN: {n_clusters} clusters + noise ({int((labels==-1).sum())} pts)")
+                    return centroids
+                elif method == "auto":
+                    print(f"      HDBSCAN: only {n_clusters} cluster(s), falling back to KMeans")
+                else:
+                    print(f"      HDBSCAN: only {n_clusters} cluster(s), consider increasing data")
+
+            except ImportError:
+                if method == "hdbscan":
+                    print(f"      hdbscan not installed. Install: pip install hdbscan")
+                # fall through to KMeans
+
+        # KMeans fallback
+        from sklearn.cluster import KMeans
+        K = max(2, min(30, len(embs) // 10))
+        km = KMeans(n_clusters=K, random_state=42, n_init=3).fit(embs)
+        centroids = km.cluster_centers_.astype(np.float32)
+        cn = np.linalg.norm(centroids, axis=1, keepdims=True)
+        cn[cn == 0] = 1.0; centroids /= cn
+        return centroids
 
     def _score_texts(self, texts, model_name):
         """Batch score texts using cached embeddings."""
