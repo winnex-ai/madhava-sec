@@ -234,3 +234,99 @@ Change Date: 2036-01-01 (converts to GPL v2.0+)
 4. **Malkov & Yashunin** (2016). Efficient and robust ANN search using HNSW
 5. **Madhava v18 Proof** (2026). Zenodo 10.5281/zenodo.21500959 — Why hierarchical methods
    cannot guarantee exact recall in high dimensions
+
+
+## Limitations (Critical Analysis)
+
+> *"A mathematical guarantee on an imperfect signal is not a safety guarantee."*
+
+### 1. The Dimensionality Paradox — Bounds Become Useless on High-D Data
+
+The Cauchy-Schwarz bound is tight only when the projection captures most of the vector's energy.
+When projecting 384D → 32D (or 1536D → 32D), a huge amount of information is discarded:
+
+```
+For isotropic high-dim data:
+  ‖v‖² ≈ ‖Pv‖² + ‖v - PᵀPv‖²
+  If d_out << d_in, then ‖v - PᵀPv‖ ≈ ‖v‖
+  → B₁(v,q) = ⟨Pv,Pq⟩ + ‖error(v)‖·‖error(q)‖ ≈ 0 + 1·1 = 1
+  → Bound = 1.0 (maximum possible cosine)
+  → Zero pruning possible
+```
+
+**Why it works on AgentHarm:** Security embeddings (all-MiniLM-L6-v2 on agent prompts)
+have **low intrinsic dimensionality** — most of the semantic signal concentrates in the first
+32-64 dimensions. The bound is tight because the discarded dimensions carry little information.
+
+**Where it would fail:** On datasets with uniformly distributed, isotropic content
+(e.g., random news articles, diverse scientific abstracts), the bound would be too loose
+to prune anything. Verified experimentally: 50K random 128D vectors → 0% pruning rate.
+
+### 2. Mathematical Guarantee ≠ Semantic Guarantee
+
+This is the most important limitation to understand.
+
+**What Madhava-Sec guarantees:**
+```
+If B₁(v,q) < best_score then v CANNOT be the top embedding match.   ✓
+```
+This is a **mathematical guarantee on cosine similarity to attack centroids.**
+
+**What Madhava-Sec does NOT guarantee:**
+```
+If B₁(v,q) < best_score then v is semantically safe to evaluate.    ✗
+```
+
+The pipeline is:
+```
+Text → all-MiniLM-L6-v2 → embedding → Cauchy-Schwarz bound → decision
+```
+
+If the embedding model misses a semantic nuance (e.g., a carefully crafted
+prompt that bypasses the embedding but is clearly harmful to a human), then:
+
+- Cauchy-Schwarz bound: 0% violations ✅ (mathematically correct)
+- Actual security: Failed ❌ (embedding never captured the threat)
+
+This is **Garbage-In-Garbage-Out with mathematical packaging** — the most dangerous
+kind of failure because it creates a *false sense of absolute safety*.
+
+### 3. The F1 Drop — What 0.818 Actually Means
+
+| Metric | Direct | Madhava | Delta |
+|:-------|:------:|:-------:|:-----:|
+| F1 | 0.8262 | 0.8183 | **-0.79 pp** |
+| AUC | 0.9105 | 0.9018 | **-0.87 pp** |
+| Spearman | 1.000 | 0.9715 | **-0.0285** |
+
+The 1% F1 drop is small but **systematic, not random**. The modulation heuristic
+(Stage 2 error backpropagation) re-ranks survivors within the bounded set. It
+occasionally promotes a borderline candidate above a truly good one.
+
+**For high-criticality systems:** Even 1% matters. A false negative that passes
+as "low severity" because its bound was just below threshold could be catastrophic.
+
+### 4. Memory Footprint of Residual Storage
+
+For N candidates in d_in dimensions, the engine stores:
+
+| Component | Size | Example (N=10K, d_in=384) |
+|:----------|:----:|:-------------------------:|
+| Raw embeddings | N × d_in × 4B | 15.4 MB |
+| Proj. Stage 1 (32D) | N × 32 × 8B | 2.6 MB |
+| Proj. Stage 2 (128D) | N × 128 × 8B | 10.2 MB |
+| Residuals Stage 1 | N × 8B | 0.08 MB |
+| Residuals Stage 2 | N × 8B | 0.08 MB |
+| **Total** | | **~28 MB** |
+
+At N=1M, this grows to ~2.8 GB — viable but non-trivial.
+The residual vectors (stored as float64) double the projection memory cost.
+
+### Summary of Limitations
+
+| Limitation | Impact | Mitigation |
+|:-----------|:-------|:-----------|
+| High-dim isotropic data | Bound too loose — no pruning | Use only on data with known low intrinsic dim |
+| Embedding quality | Guarantee is mathematical, not semantic | Combine with LLM judge for final decision |
+| 1% F1 drop | Missed edge cases | Human-in-the-loop for borderline scores |
+| Memory scaling | Non-trivial at 1M+ vectors | int8 quantization (4× compression, 0.9999 cosine) |
