@@ -48,10 +48,10 @@ With Madhava-Sec:
 
 | Scenario | Without Madhava-Sec | With Madhava-Sec | **Savings** |
 |:---------|:-------------------:|:----------------:|:-----------:|
-| **Daily LLM calls** | 41,600 | **800** | **98.1%** |
-| **Daily cost** | $416 | $8 | **$408/day** |
-| **Monthly cost** | $12,480 | $240 | **$12,240/month** |
-| **Annual cost** | $149,760 | $2,880 | **$146,880/year** |
+| **Daily LLM calls** | 10,000 | **5,080** | **49.2%** |
+| **Daily cost** | $100 | $50.80 | **$49.20/day** |
+| **Monthly cost** | $3,000 | $1,524 | **$1,476/month** |
+| **Annual cost** | $36,000 | $18,288 | **$17,712/year** |
 
 Assumptions:
 - N=416 candidates per query
@@ -61,15 +61,15 @@ Assumptions:
 
 ### License Cost Recovery
 
-> **"Reducing LLM calls by 98% pays the cost of the license in 2 weeks."**
+> **"Reducing LLM calls by ~50% pays the cost of the license in ~3 months (Startup tier)."**
 
 | License Tier | Annual Fee | Break-even Point |
 |:-------------|:----------:|:----------------:|
-| **Startup** (< $5M ARR) | $4,800 | 12 days |
-| **Enterprise** (< $50M ARR) | $12,000 | 29 days |
+| **Startup** (< $5M ARR) | $4,800 | 97 days |
+| **Enterprise** (< $50M ARR) | $12,000 | 244 days |
 | **Hyperscaler** (unlimited) | Custom | Contact us |
 
-At a savings rate of $408/day, even the Enterprise tier pays for itself in under 30 days.
+At a savings rate of $49.20/day, the Startup tier pays for itself in ~3 months.
 
 ---
 
