@@ -1,0 +1,27 @@
+{
+  "dataset": "AgentHarm (chuneeb/ai-agent-cybersecurity-dataset-2026)",
+  "n_samples": 11598,
+  "n_folds": 5,
+  "K": 30,
+  "embedder": "all-MiniLM-L6-v2",
+  "methods": {
+    "DIRECT": {
+      "F1_mean": 0.7163,
+      "F1_std": 0.0064,
+      "AUC_mean": 0.8088
+    },
+    "MADHAVA": {
+      "F1_mean": 0.7055,
+      "F1_std": 0.009,
+      "AUC_mean": 0.7984,
+      "Spearman_mean": 0.9601,
+      "bound_violations": "0",
+      "retention_pct": 98.49
+    }
+  },
+  "bound_validation": {
+    "methodology": "5-fold CV, 11598 samples \u00d7 K=30 \u00d7 2 projections = 3479400 total checks",
+    "total_violations": 0,
+    "reproduce": "python3 benchmarks/madhava_sec_benchmark_honest_v5.py"
+  }
+}
