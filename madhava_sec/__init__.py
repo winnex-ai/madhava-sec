@@ -18,7 +18,8 @@ __version__ = "2.2.0"
 from .core import _show_disclaimer
 _show_disclaimer()
 
-from .core import MadhavaSecEngine, auto_configure, estimate_intrinsic_dim
+from .core import MadhavaSecEngine, auto_configure, estimate_intrinsic_dim as _eid
+from .cache import MadhavaSecCache
 from .attack_families import AttackFamilyEngine
 from .verifier import FormalVerifier, SEVERITY_LEVELS
 from .search import AttackSearch
