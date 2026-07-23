@@ -177,6 +177,29 @@ class MadhavaSecEngine:
                 "size_mb": round(total / 1e6, 1), "regime": r["flag"]}
 
 
+def optimize_threshold(scores, labels):
+    """
+    Find optimal threshold via Youden's J statistic (maximizes TPR - FPR).
+
+    Youden's J = sensitivity + specificity - 1
+    The threshold that maximizes J is the point where the classifier
+    adds the most value over random chance.
+
+    Args:
+      scores: np.ndarray of classifier scores
+      labels: np.ndarray of ground truth labels (0/1)
+
+    Returns:
+      threshold: optimal threshold value
+      J: Youden's index at that threshold
+    """
+    from sklearn.metrics import roc_curve
+    fpr, tpr, thr = roc_curve(labels, scores)
+    J = tpr - fpr
+    best_idx = np.argmax(J)
+    return float(thr[best_idx]), float(J[best_idx])
+
+
 def auto_configure(vectors, target_energy=0.50, verbose=True):
     """Auto-configure dims based on data intrinsic dimension and energy scan."""
     N, D = vectors.shape
