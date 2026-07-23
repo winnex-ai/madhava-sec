@@ -1,25 +1,18 @@
 """
-Madhava-Sec: Mathematically Guaranteed Agent Security Scoring
-=============================================================
+Madhava-Sec: Mathematically Guaranteed Agent Security Framework
+===============================================================
 
-⚠️  IMPORTANT WARNING  ⚠️
-Mathematical Guarantee ≠ Semantic Guarantee.
+PiPrime navigation + Cauchy-Schwarz bounds + Semantic Safety ensemble.
 
-0% false negatives on EMBEDDING COSINE SIMILARITY.
-Does NOT guarantee semantic harmfulness detection.
-
-See README.md Limitations section for details.
+Architecture:
+  PiPrime (π-based navigation)  →  Madhava-Sec (bounds)  →  Semantic Safety (ensemble)
+    Exploracao do espaco de busca     Classificacao com garantia     Decisao multi-embedder
 
 License: BSL 1.1 | pay@winnex.ai
 """
-__version__ = "2.2.0"
+__version__ = "3.0.0"
 
-# Show disclaimer on import
-from .core import _show_disclaimer
-_show_disclaimer()
-
-from .core import MadhavaSecEngine, auto_configure, estimate_intrinsic_dim as _eid
-from .cache import MadhavaSecCache
-from .attack_families import AttackFamilyEngine
-from .verifier import FormalVerifier, SEVERITY_LEVELS
-from .search import AttackSearch
+from .core import MadhavaSecEngine, auto_configure, estimate_intrinsic_dim
+from .piprime import PiPrimeNavigator
+from .semantic import SafetyEnsemble
+from .agent import AgentSecurityFramework
