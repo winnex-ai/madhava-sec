@@ -1,0 +1,32 @@
+{
+  "classification_5fold_cv": {
+    "dataset": "AgentHarm (ai-safety-institute/AgentHarm)",
+    "n_samples": 11598,
+    "n_folds": 5,
+    "embedder": "all-MiniLM-L6-v2",
+    "dim": 384,
+    "K_centroids": 30,
+    "DIRECT": {
+      "F1": 0.7111,
+      "F1_std": 0.0073,
+      "AUC": 0.8088
+    },
+    "MADHAVA": {
+      "F1": 0.6962,
+      "F1_std": 0.0124,
+      "AUC": 0.7984,
+      "Spearman": 0.9601,
+      "bound_violations": "0/347940",
+      "retention_pct": 97.9
+    }
+  },
+  "pipeline": {
+    "treino": "3989 ataques + 5289 benignos (reais)",
+    "teste": "200 amostras reais",
+    "recall": 0.7576,
+    "specificity": 0.8416,
+    "precision": 0.8242,
+    "F1": 0.7895,
+    "escalation_rate": 0.455
+  }
+}
