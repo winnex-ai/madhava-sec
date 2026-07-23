@@ -1,0 +1,125 @@
+{
+  "agent_harm": {
+    "dims": [
+      128,
+      256
+    ],
+    "d_int": 23.6,
+    "full_dim": 384,
+    "regime_flag": "RED",
+    "energy_captured_pct": 18.3,
+    "bound_95": 0.731,
+    "pred_prune_pct": 0.0,
+    "actual_prune_pct": 0.0,
+    "build_ms": 232.8,
+    "ram_mb": 31.4,
+    "violations": "0/500000",
+    "viol_pct": 0.0,
+    "pca_recommended": false,
+    "pca_dim": null
+  },
+  "random_384d": {
+    "dims": [
+      128,
+      256
+    ],
+    "d_int": 376.7,
+    "full_dim": 384,
+    "regime_flag": "RED",
+    "energy_captured_pct": 18.4,
+    "bound_95": 0.718,
+    "pred_prune_pct": 0.0,
+    "actual_prune_pct": 0.0,
+    "build_ms": 232.2,
+    "ram_mb": 31.4,
+    "violations": "0/500000",
+    "viol_pct": 0.0,
+    "pca_recommended": false,
+    "pca_dim": null
+  },
+  "random_128d": {
+    "dims": [
+      64,
+      128
+    ],
+    "d_int": 127.2,
+    "full_dim": 128,
+    "regime_flag": "AMBER",
+    "energy_captured_pct": 29.4,
+    "bound_95": 0.598,
+    "pred_prune_pct": 99.2,
+    "actual_prune_pct": 0.5,
+    "build_ms": 40.1,
+    "ram_mb": 13.0,
+    "violations": "0/500000",
+    "viol_pct": 0.0,
+    "pca_recommended": false,
+    "pca_dim": null
+  },
+  "arxiv_1536d": {
+    "dims": [
+      512,
+      1536
+    ],
+    "d_int": 6.8,
+    "full_dim": 1536,
+    "regime_flag": "RED",
+    "energy_captured_pct": 17.1,
+    "bound_95": 0.747,
+    "pred_prune_pct": 0.0,
+    "actual_prune_pct": 0.0,
+    "build_ms": 2165.0,
+    "ram_mb": 156.0,
+    "violations": "0/500000",
+    "viol_pct": 0.0,
+    "pca_recommended": false,
+    "pca_dim": null
+  },
+  "arxiv_pca50": {
+    "dims": [
+      16,
+      32
+    ],
+    "d_int": 40.9,
+    "full_dim": 50,
+    "regime_flag": "RED",
+    "energy_captured_pct": 17.1,
+    "bound_95": 0.851,
+    "pred_prune_pct": 56.0,
+    "actual_prune_pct": 2.1,
+    "build_ms": 18.9,
+    "ram_mb": 4.0,
+    "violations": "0/500000",
+    "viol_pct": 0.0,
+    "pca_recommended": false,
+    "pca_dim": null
+  },
+  "sparse_85d": {
+    "dims": [
+      32,
+      64
+    ],
+    "d_int": 65.7,
+    "full_dim": 85,
+    "regime_flag": "AMBER",
+    "energy_captured_pct": 20.7,
+    "bound_95": 0.776,
+    "pred_prune_pct": 91.0,
+    "actual_prune_pct": 0.1,
+    "build_ms": 22.2,
+    "ram_mb": 7.4,
+    "violations": "0/500000",
+    "viol_pct": 0.0,
+    "pca_recommended": false,
+    "pca_dim": null
+  },
+  "cache_10000": {
+    "N": 10000,
+    "ram_build_ms": 1856.6,
+    "ram_mb": 68.9,
+    "cache_build_ms": 1892.1,
+    "cache_disk_mb": 65.8,
+    "ram_q_ms": 0.68,
+    "cache_q_ms": 0.51
+  }
+}
