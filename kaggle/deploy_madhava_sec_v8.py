@@ -12,7 +12,7 @@ import os, json, base64, time, sys
 from pathlib import Path
 
 # Token
-KAGGLE_TOKEN = "KGAT_0eff3a8a6f8c19b3485385571867bb8f"
+KAGGLE_TOKEN = os.environ.get("KAGGLE_TOKEN", "YOUR_TOKEN_HERE")
 
 # Codigo do ataque Madhava-Sec v8
 attack_code = r'''
