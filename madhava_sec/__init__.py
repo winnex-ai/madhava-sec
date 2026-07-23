@@ -12,7 +12,7 @@ License: BSL 1.1 | pay@winnex.ai
 """
 __version__ = "3.0.0"
 
-from .core import MadhavaSecEngine, auto_configure, estimate_intrinsic_dim
+from .core import MadhavaSecEngine, auto_configure, estimate_intrinsic_dim, optimize_threshold
 from .piprime import PiPrimeNavigator
 from .semantic import SafetyEnsemble
 from .agent import AgentSecurityFramework
