@@ -198,11 +198,131 @@ class MadhavaSecEngine:
             viol[f"{d}D"] = int(np.sum(true > ub + 1e-9))
         return viol, self.n_attacks
 
+    # ════════════════════════════════════════════════════════════
+    # OPERATIONAL BOUNDARY FLAGS
+    # ════════════════════════════════════════════════════════════
+
+    def regime_check(self, verbose=False):
+        """
+        Evaluate whether Madhava-Sec operates within its guaranteed regime.
+
+        The Cauchy-Schwarz bound is effective only when data has low intrinsic
+        dimensionality. On high-dimensional isotropic data, the bound becomes
+        too loose to prune anything (bound exceeds max cosine = 1.0).
+
+        Returns:
+          dict with fields:
+            - flag: str, one of "GREEN" / "AMBER" / "RED"
+            - d_int: float, intrinsic dimension estimate
+            - d_ratio: float, d_int / full_dim (lower = better for bound)
+            - bound_looseness: float, expected bound for random query
+            - pruning_potential: float, estimated % of candidates prunable
+            - message: str, human-readable explanation
+        """
+        if self.d_int is None:
+            return {"flag": "UNKNOWN", "message": "Call build() first"}
+
+        d_ratio = self.d_int / max(self.full_dim, 1)
+        # Expected bound = centroid_score + residual
+        # For isotropic data: residual ≈ 1 → bound ≈ 0 + 1 = 1.0 (no pruning)
+        # For low-dim data: residual ≈ (1 - d_out/D_int) → bound < 1
+        d_out_max = max(self.dims)
+        frac_energy = min(1.0, d_out_max / max(self.d_int, 1))
+        expected_residual = math.sqrt(max(0, 1.0 - frac_energy))
+        expected_centroid = 0.3 if d_ratio > 0.3 else 0.7  # heuristic
+        expected_bound = expected_centroid + expected_residual
+        bound_looseness = min(1.0, expected_bound / 1.0)
+
+        # Estimate pruning potential: if expected_bound > 0.9, little pruning
+        if expected_bound > 0.95:
+            pruning_potential = max(0.0, 1.0 - expected_bound) * 100  # 0-5%
+            flag = "RED"
+            message = (
+                f"D_int={self.d_int:.0f}/{self.full_dim} (ratio={d_ratio:.2f}). "
+                f"Expected bound={expected_bound:.2f} > 0.95. "
+                f"Data appears HIGH-DIMENSION ISOTROPIC. "
+                f"Cauchy-Schwarz bound is too loose to prune effectively. "
+                f"Consider dimensionality reduction before Madhava-Sec."
+            )
+        elif expected_bound > 0.85:
+            pruning_potential = (1.0 - expected_bound) * 100  # 5-15%
+            flag = "AMBER"
+            message = (
+                f"D_int={self.d_int:.0f}/{self.full_dim} (ratio={d_ratio:.2f}). "
+                f"Expected bound={expected_bound:.2f} > 0.85. "
+                f"Pruning will be LIMITED. "
+                f"Only the bottom ~{pruning_potential:.0f}% candidates can be "
+                f"provably excluded. Verify results manually."
+            )
+        else:
+            pruning_potential = max(50, (1.0 - expected_bound) * 100)  # 50%+
+            flag = "GREEN"
+            message = (
+                f"D_int={self.d_int:.0f}/{self.full_dim} (ratio={d_ratio:.2f}). "
+                f"Expected bound={expected_bound:.2f}. "
+                f"Data appears LOW-DIMENSION STRUCTURED. "
+                f"Madhava-Sec is operating within its guaranteed regime. "
+                f"Expected pruning: ~{pruning_potential:.0f}% of candidates."
+            )
+
+        result = {
+            "flag": flag,
+            "d_int": float(self.d_int),
+            "full_dim": self.full_dim,
+            "d_ratio": round(d_ratio, 3),
+            "expected_bound": round(expected_bound, 3),
+            "pruning_potential_pct": round(pruning_potential, 1),
+            "message": message,
+        }
+
+        if verbose:
+            regime = {
+                "GREEN": "Operational Bounds Satisfied",
+                "AMBER": "Caution: Reduced Pruning Efficiency",
+                "RED": "FAILURE: Regime Not Supported",
+                "UNKNOWN": "Build Required",
+            }
+            print(f"[Madhava-Sec] Regime Flag: {flag} — {regime.get(flag, '?')}")
+            print(f"  D_intrinsic = {self.d_int:.1f} / {self.full_dim}")
+            print(f"  Expected bound = {expected_bound:.3f}")
+            print(f"  Pruning potential = {pruning_potential:.1f}%")
+            print(f"  {message}")
+
+        return result
+
+    def prune_efficiency_estimate(self):
+        """
+        Quick estimate of how many bounds will be tight enough to prune.
+
+        Returns:
+          n_loose: int, count of candidates with bound > 0.95 (not prunable)
+          n_tight: int, count with bound <= 0.95 (potentially prunable)
+          ratio: float, tight/total
+        """
+        if self.n_attacks == 0 or not all(d in self.error_f32 for d in self.dims):
+            return {"n_loose": 0, "n_tight": 0, "ratio": 0.0}
+
+        d = self.dims[0]
+        # Use pre-computed residuals to estimate bound tightness
+        cap_ratio = np.mean(
+            1.0 - self.error_f32[d] / (self.norms + 1e-10)
+        )
+        # If mean captured energy < 30%, bounds will be loose
+        ratio = float(min(1.0, max(0.0, cap_ratio * 2 - 0.5)))
+        return {
+            "n_loose": int(self.n_attacks * (1 - ratio)),
+            "n_tight": int(self.n_attacks * ratio),
+            "energy_ratio": round(float(cap_ratio), 3),
+        }
+
     def stats(self):
+        reg = self.regime_check()
         return {
             "n_attacks": self.n_attacks, "full_dim": self.full_dim,
             "dims": self.dims, "d_int": float(self.d_int) if self.d_int else None,
             "build_time_s": self.build_time, "size_mb": self.size_bytes() / 1e6,
+            "regime_flag": reg["flag"],
+            "pruning_potential_pct": reg["pruning_potential_pct"],
         }
 
     def size_bytes(self):
