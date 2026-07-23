@@ -218,11 +218,57 @@ All synthetic — no external datasets. Tests: bounds, determinism, regime, PiPr
 
 ---
 
+## The Winnex AI Stack — Other Components
+
+Madhava-Sec is one layer of a larger stack. Here are the other components:
+
+### Madhava Direct (Vector Search Engine)
+
+The **core search engine** that powers the entire stack. QR-orthogonal projection + Cauchy-Schwarz bound for deterministic vector search.
+
+- **NDCG@10 = 1.000** on SIFT-1M (50K subset)
+- **Build 5–65× faster** than HNSW (0.09s vs 15s at 100K)
+- **0 bound violations** in 254M+ query-vector pairs
+- **Deterministic, CPU-only inference**
+- Zenodo: [10.5281/zenodo.21088504](https://zenodo.org/records/21088504)
+- Kaggle: [Madhava V12 BIGANN Verified](https://www.kaggle.com/code/kleniopadilha/madhava-v12-bigann-verified)
+
+### Madhava Cascade (Multi-Stage Search)
+
+Extends Madhava Direct with a configurable pipeline: adaptive keep-ratio, error backpropagation modulation, and streaming rebuild support (39–42 rebuilds/minute vs HNSW's ~2/min).
+
+- Zenodo: [10.5281/zenodo.21166403](https://zenodo.org/records/21166403)
+- Kaggle: [Madhava BIGANN Streaming](https://www.kaggle.com/code/kleniopadilha/madhava-bigann-100m-true-streaming)
+
+### PiPrime (Cognitive Navigation)
+
+π-based navigation layer that explores search spaces using K orthonormal anchors indexed by prime numbers. Generates candidates for Madhava-Sec to score. Fully deterministic.
+
+- Zenodo: [10.5281/zenodo.20856138](https://zenodo.org/records/20856138)
+- Repository: `madhava_sec/piprime.py` (included in this package)
+
+### SafetyEnsemble (Multi-Embedder Consensus)
+
+Resolves the GIGO single-embedder problem by combining all-MiniLM, BGE, and e5 with weighted consensus. Only flags a prompt as safe if all models agree.
+
+- Repository: `madhava_sec/semantic.py` (included in this package)
+
+### Complete Benchmark
+
+Full comparison of all methods vs FAISS across 3 datasets, 16 methods, 12 metrics:
+
+- Zenodo: [10.5281/zenodo.21088504](https://zenodo.org/records/21088504) (same as Madhava Direct)
+- Kaggle: [Winnex Definitive Benchmark](https://www.kaggle.com/code/kleniopadilha/winnex-definitive-benchmark)
+
+---
+
 ## References
 
-1. **Madhava-Sec Zenodo** (2026). 10.5281/zenodo.21506566
-2. **Madhava v18 Proof** (2026). 10.5281/zenodo.21500959
-3. **AgentHarm** (2025). ai-safety-institute/AgentHarm
+1. **Madhava-Sec** (2026). 10.5281/zenodo.21506566 — This library
+2. **Madhava Direct** (2026). 10.5281/zenodo.21088504 — Core search engine, NDCG@10=1.000, 254M+ pairs
+3. **Madhava v18 Proof** (2026). 10.5281/zenodo.21500959 — Why hierarchical methods fail in high dimensions
+4. **Madhava Cascade** (2026). 10.5281/zenodo.21166403 — Multi-stage search with streaming support
+5. **AgentHarm** (2025). ai-safety-institute/AgentHarm — 416 agent security scenarios
 
 ---
 
