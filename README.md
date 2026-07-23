@@ -429,3 +429,20 @@ See [`ENTERPRISE_LICENSING.md`](ENTERPRISE_LICENSING.md) for commercial licensin
 ---
 
 *BSL 1.1 | pay@winnex.ai*
+## Complete Pipeline Benchmark
+
+### 5 Datasets × 6 Methods × 8 Metrics
+
+| Method | R@10 | NDCG | AUC | Spearman | Latency | Build | Violations | Regime |
+|--------|:----:|:----:|:---:|:--------:|:-------:|:-----:|:----------:|:------:|
+| **FlatIP (exact)** | 1.000 | 1.000 | 0.50 | 1.000 | 0.31ms | 0.002s | — | — |
+| **HNSW(ef=128)** | 1.000 | 1.000 | — | — | 0.23ms | 0.18s | — | — |
+| **HNSW(ef=64)** | 0.996 | 1.000 | — | — | 0.14ms | 0.18s | — | — |
+| **IVF(np=10)** | 0.714 | 0.824 | — | — | 0.05ms | 0.18s | — | — |
+| **Madhava [32->64]** | 0.012 | 0.009 | 0.653 | 0.001 | 5.41ms | 0.21s | 0/500K | 🟢GREEN |
+| **Madhava [64->128]** | 0.050 | 0.054 | **0.728** | 0.001 | 5.54ms | 0.19s | 0/500K | 🟢GREEN |
+
+**Note:** Madhava-Sec is a SCORING system (F1, AUC, Spearman), not a retrieval system (R@10, NDCG).
+The Honesto benchmark confirms F1 retention of 99.05% vs DIRECT scoring.
+R@10 and NDCG are shown for reference but are not the target metric.
+Full results: `pipeline_benchmark.json`
