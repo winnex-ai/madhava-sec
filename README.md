@@ -330,3 +330,12 @@ The residual vectors (stored as float64) double the projection memory cost.
 | Embedding quality | Guarantee is mathematical, not semantic | Combine with LLM judge for final decision |
 | 1% F1 drop | Missed edge cases | Human-in-the-loop for borderline scores |
 | Memory scaling | Non-trivial at 1M+ vectors | int8 quantization (4× compression, 0.9999 cosine) |
+
+## Implemented Fixes (v2.1)
+
+| Gargalo | Solução | Status |
+|:--------|:--------|:-------|
+| **Dimensionality Paradox** | Adaptive d1/d2 via intrinsic dimension (von Neumann entropy) | ✅ `_compute_adaptive_dims()` |
+| **Math != Semantic** | 3-level confidence pruning: confident/borderline/escalate | ✅ `confidence_levels` in estimate_score() |
+| **F1 Drop** | Conditional modulation (only when improvement_ratio > 1.2) + larger k2=200 | ✅ `imp_ratio` gate |
+| **Memory** | float32 pipeline (50% reduction), int8 option | ✅ 2.8GB -> 1.4GB for 1M vectors |
