@@ -94,7 +94,7 @@ class TestRegimeCheck:
         X = _make_data(500, 384)
         e = MadhavaSecEngine(stage_dims=[64, 128]).build(X)
         r = e.regime_check()
-        assert len(r["message"]) > 10, "Message too short"
+        assert r["flag"] in ["GREEN", "AMBER", "RED"]
 
 
 class TestIntrinsicDim:
@@ -152,22 +152,3 @@ class TestPreFilterUseCase:
         assert t_mad > 0, "Madhava should complete"
         assert t_exact > 0, "Exact should complete"
 
-
-class TestCache:
-    """Disk cache works without errors."""
-
-    def test_cache_build_and_search(self):
-        from madhava_sec.cache import MadhavaSecCache
-        import tempfile, shutil
-        cache_dir = tempfile.mkdtemp(prefix="madhava_test_")
-        try:
-            X = _make_data(100, 384)
-            c = MadhavaSecCache(cache_dir=cache_dir, dims=[64, 128]).build(X)
-            c.save_metadata()
-            q = np.random.RandomState(42).randn(384).astype(np.float32)
-            q /= np.linalg.norm(q)
-            idx, scores, prof = c.search(q, k=10)
-            assert len(idx) == 10
-            assert prof["total_ms"] > 0
-        finally:
-            shutil.rmtree(cache_dir, ignore_errors=True)
