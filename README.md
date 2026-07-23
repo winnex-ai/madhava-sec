@@ -331,11 +331,55 @@ The residual vectors (stored as float64) double the projection memory cost.
 | 1% F1 drop | Missed edge cases | Human-in-the-loop for borderline scores |
 | Memory scaling | Non-trivial at 1M+ vectors | int8 quantization (4× compression, 0.9999 cosine) |
 
+
+## Operational Flags (Regime Check)
+
+Madhava-Sec operates under a **known operational boundary**: the Cauchy-Schwarz bound
+is tight only when data has low intrinsic dimensionality (`D_int << D`). To prevent
+silent failure, every build automatically runs a `regime_check()` that returns a flag.
+
+```python
+engine = MadhavaSecEngine().build(vectors)
+regime = engine.regime_check(verbose=True)
+```
+
+| Flag | D_int ratio | Expected Bound | Pruning | Action |
+|:-----|:-----------|:--------------:|:-------:|:-------|
+| 🟢 **GREEN** | `D_int/D < 0.3` | < 0.85 | > 50% | Normal operation |
+| 🟡 **AMBER** | `0.3 < D_int/D < 0.6` | 0.85–0.95 | 5–50% | Verify results manually |
+| 🔴 **RED** | `D_int/D > 0.6` | > 0.95 | < 5% | **Not supported — reduce dim first** |
+
+**RED flag:** The expected bound exceeds 0.95, meaning the Cauchy-Schwarz
+bound is too loose to prune meaningfully. The system still produces 0% bound
+violations (the math is always correct), but pruning efficiency is near zero.
+Pre-process with PCA or select a different embedding model with lower intrinsic dimension.
+
 ## Implemented Fixes (v2.1)
 
-| Gargalo | Solução | Status |
+| Gargalo | Solução | Código |
 |:--------|:--------|:-------|
-| **Dimensionality Paradox** | Adaptive d1/d2 via intrinsic dimension (von Neumann entropy) | ✅ `_compute_adaptive_dims()` |
-| **Math != Semantic** | 3-level confidence pruning: confident/borderline/escalate | ✅ `confidence_levels` in estimate_score() |
-| **F1 Drop** | Conditional modulation (only when improvement_ratio > 1.2) + larger k2=200 | ✅ `imp_ratio` gate |
-| **Memory** | float32 pipeline (50% reduction), int8 option | ✅ 2.8GB -> 1.4GB for 1M vectors |
+| **Dimensionality Paradox** | Adaptive d1/d2 via intrinsic dimension (von Neumann entropy) + regime_check() | `estimate_intrinsic_dim()`, `regime_check()` |
+| **Math != Semantic** | 3-level confidence pruning: confident/borderline/escalate | `confidence_levels` in `estimate_score()` |
+| **F1 Drop** | Conditional modulation (only when improvement_ratio > 1.2) + larger k2=200 | `imp_ratio` gate in `estimate_score()` |
+| **Memory** | float32 pipeline (50% reduction) | `astype(np.float32)` everywhere |
+
+## Full API
+
+```python
+from madhava_sec import MadhavaSecEngine
+
+engine = MadhavaSecEngine(stage_dims=[32, 128])
+engine.build(attack_vectors)  # N x 384 float32
+
+# Check operational regime
+regime = engine.regime_check(verbose=True)
+# -> {"flag": "GREEN", "d_int": 18.5, "pruning_potential_pct": 72.3}
+
+# Estimate scores with confidence profile
+scores, profile = engine.estimate_score(query_emb, return_profile=True)
+# -> profile["regime_flag"], profile["confidence_levels"]
+
+# Verify 0% bound violations
+violations, total = engine.check_bounds(query_emb)
+# -> {"32D": 0, "128D": 0}, 416
+```
