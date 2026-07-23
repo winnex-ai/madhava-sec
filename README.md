@@ -68,22 +68,61 @@ The modulation learns how much the bound tightened from Stage 1 to Stage 2:
 - If error dropped significantly (e₁ >> e₂): α → 1, apply full correction
 - If error barely changed: α → 0, trust Stage 1
 
-### PiPrime = π-Based Navigation (Separate Layer)
+## How Madhava-Sec Fits in the Winnex AI Stack
 
-PiPrime is a **cognitive navigation layer** (not part of Madhava-Sec core) that explores the search space using K orthonormal anchors indexed by π and prime numbers. It generates candidates; Madhava-Sec scores them.
+Madhava-Sec is the **security scoring layer** within a larger enterprise AI platform. The Winnex AI Stack includes:
 
 ```
-        Winnex AI Security Stack
-┌──────────────────────────────────────────┐
-│  Layer 1: Data → attack embeddings       │
-│  Layer 2: PiPrime → explore, generate    │
-│  Layer 3: Madhava-Sec → score, bound     │ ← THIS LIBRARY
-│  Layer 4: SafetyEnsemble → multi-model   │
-│  Layer 5: LLM Judge → final decision     │
-└──────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                  WINNEX AI PLATFORM                          │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  New Maestro (Zenodo 21182272)                                │
+│  Multi-layer AI architecture: provider auto-failover          │
+│  (wireguard → SGLang → DeepSeek → Z.AI → OpenAI →            │
+│   Anthropic → Google), entity generation, multi-agent chat   │
+│  83 files, ~27 API endpoints                                 │
+│                                                               │
+│  Winnex Engine (Zenodo 21182812)                              │
+│  Marketplace & WorkRAI v2.0: agent commerce, installation,    │
+│  post-purchase orchestration, 18 entities, 35+ processors,   │
+│  2 daemons, auto-rollback system                              │
+│                                                               │
+│  Tracer-Gov (Zenodo 21292595)                                 │
+│  RAI Architecture: Running Agent Instance framework,          │
+│  hierarchical agent taxonomy (Level 0-9), WorkRAI atomic     │
+│  task engine, Strategy Room protocol, cryptographic           │
+│  credential enforcement                                       │
+│                                                               │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │              SECURITY & SCOPING LAYER                    │ │
+│  │                                                          │ │
+│  │  Layer 1: Data → attack embeddings (your dataset)       │ │
+│  │  Layer 2: PiPrime → π-based navigation, candidate       │ │
+│  │           exploration (Zenodo 20856138)                  │ │
+│  │  Layer 3: Madhava-Sec → Cauchy-Schwarz bound scoring   │ │ ← THIS LIBRARY
+│  │  Layer 4: SafetyEnsemble → multi-embedder consensus     │ │
+│  │  Layer 5: Action → allow / escalate / LLM judge        │ │
+│  │                                                          │ │
+│  └─────────────────────────────────────────────────────────┘ │
+│                                                               │
+│  Madhava Direct (Zenodo 21088504)                             │
+│  Vector search engine: NDCG@10=1.000, build 5-65× faster     │
+│  than HNSW, 0 violations in 254M+ pairs, CPU-only inference  │
+│                                                               │
+│  Madhava Cascade (Zenodo 21166403)                            │
+│  Multi-stage search with streaming rebuild (39-42/minute)     │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-Madhava-Sec lives at Layer 3. It does not generate, does not make final safety decisions — it **scores with a guarantee**.
+**Madhava-Sec lives at Layer 3 of the security/scoping layer.** It does not generate candidates (PiPrime's job), does not make final governance decisions (Tracer-Gov's job), and does not run agents (Winnex Engine's job). It **scores prompts against known attack centroids with a mathematical guarantee**.
+
+The security layer connects to the broader platform:
+- **Input** from PiPrime (explored candidates) or directly from user prompts
+- **Output** to Tracer-Gov (audit trail of all scoring decisions)
+- **Escalation** to New Maestro's provider failover (if LLM judge is needed)
+- **Monitoring** via Winnex Engine's WorkRAI framework
 
 ---
 
