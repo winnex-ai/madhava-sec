@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "winnex-madhava-sec"
-version = "2.0.0"
+version = "3.0.0"
 description = "Mathematically Guaranteed Agent Security Framework — Cauchy-Schwarz bound pruning for AI agent attack detection and amplification."
 readme = "README.md"
 requires-python = ">=3.8"
