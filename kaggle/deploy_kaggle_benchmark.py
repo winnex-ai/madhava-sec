@@ -195,12 +195,12 @@ class ScoreMadhavaNative:
 def optimize_threshold(s, y):
     if len(np.unique(y)) < 2: return 0.5
     best_f1, best_th = 0.0, 0.5
-    for th in np.linspace(s.min(), s.max(), 500):
+    for th in np.linspace(float(s.min()), float(s.max()), 500):
         p = (s >= th).astype(np.int32)
         if p.sum() == 0: continue
         f1 = f1_score(y, p, zero_division=0)
         if f1 > best_f1: best_f1, best_th = f1, th
-    return best_th
+    return float(best_th)
 
 def classify(s, y, th):
     p = (s >= th).astype(np.int32)
@@ -292,6 +292,17 @@ tot_v = sum(r['methods']['madhava_native']['bound_violations'] for r in all_resu
 tot_c = sum(r['methods']['madhava_native']['bound_checked'] for r in all_results)
 print(f"\\n  Bound violations (native C++): {tot_v} / {tot_c}")
 
+class _NpEncoder(json.JSONEncoder):
+    # Serialize numpy scalars (float32/int32) that can leak from scores.
+    def default(self, o):
+        if isinstance(o, (np.floating, np.integer)):
+            return o.item()
+        if isinstance(o, (np.ndarray,)):
+            return o.tolist()
+        if isinstance(o, (np.bool_,)):
+            return bool(o)
+        return super().default(o)
+
 out = {'version': 'kaggle-1.0',
        'kaggle_dataset': '{KAGGLE_DATASET}',
        'model': 'all-MiniLM-L6-v2',
@@ -301,7 +312,7 @@ out = {'version': 'kaggle-1.0',
        'results': all_results,
        'bound_violations': {'violations': tot_v, 'checked': tot_c}}
 with open('/kaggle/working/kaggle_benchmark_native_results.json','w') as f:
-    json.dump(out, f, indent=2)
+    json.dump(out, f, indent=2, cls=_NpEncoder)
 print("\\nSaved /kaggle/working/kaggle_benchmark_native_results.json")
 """
 
