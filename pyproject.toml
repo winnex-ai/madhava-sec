@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "winnex-madhava-sec"
 version = "3.0.0"
-description = "Mathematically Guaranteed Agent Security Framework — Cauchy-Schwarz bound pruning for AI agent attack detection and amplification."
+description = "Mathematically Guaranteed Agent Security Framework — Cauchy-Schwarz bound pruning for AI agent prompt-injection detection, attack amplification, and multi-embedder semantic safety. PiPrime navigation + bounds + SafetyEnsemble."
 readme = "README.md"
 requires-python = ">=3.8"
 license = { file = "LICENSE" }
@@ -16,6 +16,9 @@ keywords = [
     "agent-security", "ai-safety", "prompt-injection", "cauchy-schwarz",
     "attack-detection", "agentharm", "security", "adversarial",
     "vector-search", "bound", "llm-security", "prompt-security",
+    "agent-security", "multi-embedder", "embedding", "semantic-safety",
+    "safety-ensemble", "pipeline", "classifier", "pi-prime",
+    "navigator", "adversarial-attacks", "prompt-injection-detection",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
