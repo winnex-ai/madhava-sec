@@ -304,7 +304,7 @@ class _NpEncoder(json.JSONEncoder):
         return super().default(o)
 
 out = {'version': 'kaggle-1.0',
-       'kaggle_dataset': '{KAGGLE_DATASET}',
+       'kaggle_dataset': 'krishnayadav456wrsty/prompt-injection-and-jailbreak-detection-dataset',
        'model': 'all-MiniLM-L6-v2',
        'cpp_native': True,
        'dataset_n': len(texts), 'n_inj': int(labels.sum()), 'n_clean': int((1-labels).sum()),

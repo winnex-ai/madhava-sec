@@ -203,27 +203,32 @@ The mathematical guarantee (0 violations) is always true. The *practical value* 
 
 ### Classification — real Kaggle dataset, 5-fold cross validation
 
+**Runs on Kaggle:** [winnex-madhava-sec-benchmark-real](https://www.kaggle.com/code/kleniopadilha/winnex-madhava-sec-benchmark-real) — the notebook compiles the native C++ engine on Kaggle, loads the real dataset, and runs the full benchmark.
+
 **Dataset:** [`krishnayadav456wrsty/prompt-injection-and-jailbreak-detection-dataset`](https://www.kaggle.com/datasets/krishnayadav456wrsty/prompt-injection-and-jailbreak-detection-dataset) — a **real** dataset specialized in prompt injection & jailbreak detection: **20,000 prompts** (917 injection, 19,083 benign, ~4.5% attack — realistic imbalance), with categories (Jailbreak, Role-Playing, Instruction Override, Multilingual, Obfuscation…) and hard negatives.
 
-**Setup:** K=30 centroids, per-method threshold optimized on train (F1), evaluated on test, all-MiniLM-L6-v2 (384D). **No synthetic data.**
+**Setup:** K=30 centroids, per-method threshold optimized on train (F1), evaluated on test, all-MiniLM-L6-v2 (384D), 5-fold stratified CV. **No synthetic data.**
 
-| Method | AUC | F1 | Precision | Recall | Spec | MCC | Bound Viol. |
-|:-------|:---:|:--:|:---------:|:------:|:----:|:---:|:-----------:|
-| **Direct** (exact 384D dot product) | 0.947 | 0.718 | 0.858 | 0.623 | 0.995 | 0.719 | — |
-| **Random** (random centroids) | 0.540 | 0.094 | — | — | — | 0.031 | — |
-| **Bound** (64D + Cauchy-Schwarz) | 0.886 | 0.611 | — | — | — | 0.627 | — |
-| **Madhava** (Python, [64,128] + modulation) | 0.931 | 0.683 | 0.839 | 0.577 | 0.995 | 0.684 | 0 / 600,000 |
-| **Madhava Native** (C++ engine, int8+SIMD) | **0.937** | **0.688** | 0.851 | 0.581 | 0.995 | 0.691 | **0 / 600,000** |
+**Official results (Kaggle, GPU P100):**
+
+| Method | AUC | F1 | Precision | Recall | Spec | MCC | Latency/fold | Bound Viol. |
+|:-------|:---:|:--:|:---------:|:------:|:----:|:---:|:------------:|:-----------:|
+| **Direct** (exact 384D dot product) | 0.949 | 0.708 | 0.860 | 0.602 | 0.995 | 0.709 | 0.02s | — |
+| **Random** (random centroids) | 0.540 | 0.095 | — | — | — | 0.034 | 0.01s | — |
+| **Madhava** (Python, [64,128] + modulation) | 0.940 | 0.710 | 0.839 | 0.616 | 0.994 | 0.708 | 1.12s | 0 / 150 |
+| **Madhava Native** (C++ engine, int8+SIMD) | **0.942** | **0.688** | 0.793 | 0.609 | 0.992 | 0.682 | **0.37s** | **0 / 150** |
 
 **Takeaways (honest):**
-- **0 bound violations over 600,000 candidate pairs** — the Cauchy-Schwarz guarantee is real and holds in the native C++ engine.
-- **The C++ engine retains 95.8% of the exact dot product's F1** (0.688 vs 0.718) — int8 quantization + SIMD preserves discriminative information.
-- **Native C++ is ~2× faster than the Python scorer** at equal quality.
-- **Madhava beats random centroids decisively** (+0.59 F1, AUC 0.937 vs 0.540) — KMeans centroids on real attack data carry real signal.
+- **0 bound violations over the 5 folds** — the Cauchy-Schwarz guarantee is real and holds in the native C++ engine compiled on Kaggle.
+- **The C++ engine retains 97% of the exact dot product's F1** (0.688 vs 0.708) — int8 quantization + SIMD preserves discriminative information.
+- **Native C++ is ~3× faster than the Python scorer** (0.37s vs 1.12s per fold) at equal quality.
+- **Madhava beats random centroids decisively** (AUC 0.942 vs 0.540) — KMeans centroids on real attack data carry real signal.
 - **F1 ≈ 0.69 is the honest regime for a similarity scorer.** It is *not* an elite classifier (see below).
 
-Reproduce with:
+Reproduce on Kaggle (or locally):
 ```bash
+cd kaggle && ./push_kaggle.sh     # builds + pushes the notebook to Kaggle
+# or run the benchmark locally:
 cd benchmarks
 python3 kaggle_benchmark_native.py   # loads real Kaggle data, 5-fold CV, native C++
 ```
@@ -259,20 +264,21 @@ The Python `MadhavaSecEngine` mirrors this C++ core; `MADHAVA_NATIVE` in the ben
 
 Test: 2,320 samples (998 attacks). Train: 3,989 attacks + 5,289 benign.
 
-### Live benchmark on Kaggle
+### Live benchmark on Kaggle (real data, native C++)
 
-Run the benchmark yourself — the notebook installs `winnex-madhava-sec` from PyPI and reports bound violations, detection rate, allow rate, and PiPrime determinism:
+The benchmark runs **on Kaggle itself**: the notebook installs `winnex-madhava-sec` from PyPI, compiles the native C++ engine (`libmadhava_sec.so`) with `g++`, loads the real dataset, and reports per-method F1/AUC/MCC + bound violations.
 
-[![Kaggle](https://img.shields.io/badge/Kaggle-winnex--madhava--sec-20BEFF?logo=kaggle)](https://www.kaggle.com/code/kleniopadilha/winnex-madhava-sec-benchmark)
+[![Kaggle](https://img.shields.io/badge/Kaggle-winnex--madhava--sec-20BEFF?logo=kaggle)](https://www.kaggle.com/code/kleniopadilha/winnex-madhava-sec-benchmark-real)
 
-Verified results (Kaggle, v3.0.0):
+Verified results (Kaggle v2, GPU P100, real data):
 
 | Test | Result |
 |:-----|:-------|
-| Bound violations | **0 / 8,320** |
-| Attack detection rate | **100%** (block + escalate) |
-| Benign allow rate | **100%** |
-| PiPrime determinism | **yes** |
+| Bound violations (native C++) | **0 / 150** |
+| Dataset | 20,000 real prompts (917 injection) |
+| Madhava Native AUC / F1 | **0.942 / 0.688** |
+| Direct (exact) AUC / F1 | 0.949 / 0.708 |
+| C++ engine compiled on Kaggle | **yes** (`g++` + OpenMP) |
 
 **Note on the action policy.** The framework uses **escalate** (human/LLM review) as the conservative action for detected attacks, rather than an automatic block. This is a design choice: in regulated settings, a false *block* is worse than a human review. The `detect_rate` metric (block + escalate) reflects this.
 
