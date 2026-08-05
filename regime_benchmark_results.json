@@ -1,0 +1,67 @@
+{
+  "agent_harm": {
+    "flag": "GREEN",
+    "d_int": 23.598201859131574,
+    "full_dim": 384,
+    "d_ratio": 0.061,
+    "expected_bound": 0.7,
+    "pruning_potential_pct": 50,
+    "message": "D_int=24/384 (ratio=0.06). Expected bound=0.70. Data appears LOW-DIMENSION STRUCTURED. Madhava-Sec is operating within its guaranteed regime. Expected pruning: ~50% of candidates.",
+    "actual_pruning_pct": 0.0,
+    "violations": 0,
+    "total_checks": 500000,
+    "violation_rate_pct": 0.0
+  },
+  "random_384d": {
+    "flag": "AMBER",
+    "d_int": 369.5522708444491,
+    "full_dim": 384,
+    "d_ratio": 0.962,
+    "expected_bound": 0.854,
+    "pruning_potential_pct": 14.6,
+    "message": "D_int=370/384 (ratio=0.96). Expected bound=0.85 > 0.85. Pruning will be LIMITED. Only the bottom ~15% candidates can be provably excluded. Verify results manually.",
+    "actual_pruning_pct": 0.0,
+    "violations": 0,
+    "total_checks": 500000,
+    "violation_rate_pct": 0.0
+  },
+  "random_128d": {
+    "flag": "GREEN",
+    "d_int": 126.41379756097986,
+    "full_dim": 128,
+    "d_ratio": 0.988,
+    "expected_bound": 0.3,
+    "pruning_potential_pct": 70.0,
+    "message": "D_int=126/128 (ratio=0.99). Expected bound=0.30. Data appears LOW-DIMENSION STRUCTURED. Madhava-Sec is operating within its guaranteed regime. Expected pruning: ~70% of candidates.",
+    "actual_pruning_pct": 99.9,
+    "violations": 0,
+    "total_checks": 500000,
+    "violation_rate_pct": 0.0
+  },
+  "arxiv_1536d": {
+    "flag": "GREEN",
+    "d_int": 6.558483105333144,
+    "full_dim": 1536,
+    "d_ratio": 0.004,
+    "expected_bound": 0.7,
+    "pruning_potential_pct": 50,
+    "message": "D_int=7/1536 (ratio=0.00). Expected bound=0.70. Data appears LOW-DIMENSION STRUCTURED. Madhava-Sec is operating within its guaranteed regime. Expected pruning: ~50% of candidates.",
+    "actual_pruning_pct": 0.0,
+    "violations": 0,
+    "total_checks": 500000,
+    "violation_rate_pct": 0.0
+  },
+  "arxiv_pca50": {
+    "flag": "GREEN",
+    "d_int": 40.79324807023937,
+    "full_dim": 50,
+    "d_ratio": 0.816,
+    "expected_bound": 0.3,
+    "pruning_potential_pct": 70.0,
+    "message": "D_int=41/50 (ratio=0.82). Expected bound=0.30. Data appears LOW-DIMENSION STRUCTURED. Madhava-Sec is operating within its guaranteed regime. Expected pruning: ~70% of candidates.",
+    "actual_pruning_pct": 99.9,
+    "violations": 0,
+    "total_checks": 500000,
+    "violation_rate_pct": 0.0
+  }
+}

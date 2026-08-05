@@ -1,0 +1,86 @@
+{
+  "DIRECT_K10": {
+    "F1": 0.6667,
+    "AUC": 0.4947,
+    "Spearman": 1.0,
+    "K": 10
+  },
+  "MADHAVA_K10_32": {
+    "F1": 0.6668,
+    "AUC": 0.5004,
+    "Spearman": 0.9161,
+    "K": 10,
+    "dims": [
+      32,
+      64
+    ],
+    "regime": "GREEN"
+  },
+  "MADHAVA_K10_64": {
+    "F1": 0.6668,
+    "AUC": 0.4986,
+    "Spearman": 0.9594,
+    "K": 10,
+    "dims": [
+      64,
+      128
+    ],
+    "regime": "GREEN"
+  },
+  "DIRECT_K30": {
+    "F1": 0.6667,
+    "AUC": 0.4607,
+    "Spearman": 1.0,
+    "K": 30
+  },
+  "MADHAVA_K30_32": {
+    "F1": 0.6668,
+    "AUC": 0.4629,
+    "Spearman": 0.9135,
+    "K": 30,
+    "dims": [
+      32,
+      64
+    ],
+    "regime": "GREEN"
+  },
+  "MADHAVA_K30_64": {
+    "F1": 0.6668,
+    "AUC": 0.4601,
+    "Spearman": 0.9595,
+    "K": 30,
+    "dims": [
+      64,
+      128
+    ],
+    "regime": "GREEN"
+  },
+  "DIRECT_K50": {
+    "F1": 0.6668,
+    "AUC": 0.5127,
+    "Spearman": 1.0,
+    "K": 50
+  },
+  "MADHAVA_K50_32": {
+    "F1": 0.6667,
+    "AUC": 0.5132,
+    "Spearman": 0.9087,
+    "K": 50,
+    "dims": [
+      32,
+      64
+    ],
+    "regime": "GREEN"
+  },
+  "MADHAVA_K50_64": {
+    "F1": 0.6668,
+    "AUC": 0.5149,
+    "Spearman": 0.9538,
+    "K": 50,
+    "dims": [
+      64,
+      128
+    ],
+    "regime": "GREEN"
+  }
+}

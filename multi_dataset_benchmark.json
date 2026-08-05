@@ -1,0 +1,42 @@
+{
+  "HF Prompt Injections": {
+    "n": 11598,
+    "D_int": 146.1,
+    "K": 30,
+    "DIRECT_F1": 0.7111,
+    "MADHAVA_F1": 0.6962,
+    "Spearman": 0.9601,
+    "Retention": "97.9%",
+    "Violations": "0/69600"
+  },
+  "AgentHarm Behaviors (JSON)": {
+    "n": 352,
+    "D_int": 51.6,
+    "K": 23,
+    "DIRECT_F1": 0.4667,
+    "MADHAVA_F1": 0.4743,
+    "Spearman": 0.9716,
+    "Retention": "101.6%",
+    "Violations": "0/2714"
+  },
+  "OTX Threat Pulses": {
+    "n": 1200,
+    "D_int": 55.0,
+    "K": 30,
+    "DIRECT_F1": 0.6933,
+    "MADHAVA_F1": 0.6716,
+    "Spearman": 0.9457,
+    "Retention": "96.9%",
+    "Violations": "0/7200"
+  },
+  "OTX AI Agent Threats": {
+    "n": 1610,
+    "D_int": 60.9,
+    "K": 30,
+    "DIRECT_F1": 0.3079,
+    "MADHAVA_F1": 0.3079,
+    "Spearman": 0.9892,
+    "Retention": "100.0%",
+    "Violations": "0/9660"
+  }
+}
