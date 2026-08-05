@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "winnex-madhava-sec"
+version = "2.0.0"
+description = "Mathematically Guaranteed Agent Security Framework — Cauchy-Schwarz bound pruning for AI agent attack detection and amplification."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Winnex Brasil Soluções Empresariais LTDA-ME", email = "pay@winnex.ai" },
+]
+keywords = [
+    "agent-security", "ai-safety", "prompt-injection", "cauchy-schwarz",
+    "attack-detection", "agentharm", "security", "adversarial",
+    "vector-search", "bound", "llm-security", "prompt-security",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+]
+dependencies = [
+    "numpy>=1.20",
+    "scikit-learn>=1.0",
+    "sentence-transformers>=2.0",
+    "pandas>=1.0",
+]
+
+[project.urls]
+Homepage = "https://winnex.ai"
+Source = "https://github.com/winnex-ai/madhava-sec"
+Zenodo = "https://zenodo.org/records/21166403"
+
+[tool.setuptools]
+packages = ["madhava_sec"]
+
+[tool.setuptools.package-data]
+madhava_sec = ["py.typed"]
