@@ -11,11 +11,15 @@ build/
 .env.local
 *.token
 **/kaggle.json
-kaggle/
+kaggle/*
 !kaggle/**/*.md
+!kaggle/deploy_kaggle_benchmark.py
+!kaggle/push_kaggle.sh
+!kaggle/deploy_pip_benchmark.py
 
 # Kaggle deployment scripts (contain tokens)
 deploy_*.py
+!kaggle/deploy_kaggle_benchmark.py
 kaggle_*.py
 
 # Notebooks with embedded tokens
