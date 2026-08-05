@@ -1,0 +1,634 @@
+{
+  "version": "1.0",
+  "n_splits": 5,
+  "kaggle_dataset": "krishnayadav456wrsty/prompt-injection-and-jailbreak-detection-dataset",
+  "model": "all-MiniLM-L6-v2",
+  "cpp_native": true,
+  "dataset_n": 20000,
+  "dataset_n_inj": 917,
+  "dataset_n_clean": 19083,
+  "summary": {
+    "direct": {
+      "auc": {
+        "mean": 0.9469,
+        "std": 0.0096
+      },
+      "f1": {
+        "mean": 0.7184,
+        "std": 0.0327
+      },
+      "precision": {
+        "mean": 0.8577,
+        "std": 0.0379
+      },
+      "recall": {
+        "mean": 0.6226,
+        "std": 0.0591
+      },
+      "specificity": {
+        "mean": 0.9949,
+        "std": 0.0017
+      },
+      "mcc": {
+        "mean": 0.7186,
+        "std": 0.0257
+      },
+      "spearman_vs_direct": {
+        "mean": 1.0,
+        "std": 0.0
+      }
+    },
+    "random": {
+      "auc": {
+        "mean": 0.5404,
+        "std": 0.0112
+      },
+      "f1": {
+        "mean": 0.0939,
+        "std": 0.0031
+      },
+      "precision": {
+        "mean": 0.0499,
+        "std": 0.0017
+      },
+      "recall": {
+        "mean": 0.795,
+        "std": 0.033
+      },
+      "specificity": {
+        "mean": 0.2711,
+        "std": 0.0438
+      },
+      "mcc": {
+        "mean": 0.031,
+        "std": 0.0112
+      },
+      "spearman_vs_direct": {
+        "mean": 0.0646,
+        "std": 0.0103
+      }
+    },
+    "bound": {
+      "auc": {
+        "mean": 0.8864,
+        "std": 0.0108
+      },
+      "f1": {
+        "mean": 0.6107,
+        "std": 0.0308
+      },
+      "precision": {
+        "mean": 0.8585,
+        "std": 0.0848
+      },
+      "recall": {
+        "mean": 0.4809,
+        "std": 0.0547
+      },
+      "specificity": {
+        "mean": 0.9957,
+        "std": 0.0035
+      },
+      "mcc": {
+        "mean": 0.6274,
+        "std": 0.0254
+      },
+      "spearman_vs_direct": {
+        "mean": 0.6291,
+        "std": 0.0281
+      }
+    },
+    "madhava": {
+      "auc": {
+        "mean": 0.9313,
+        "std": 0.0148
+      },
+      "f1": {
+        "mean": 0.6827,
+        "std": 0.0474
+      },
+      "precision": {
+        "mean": 0.8394,
+        "std": 0.0389
+      },
+      "recall": {
+        "mean": 0.5768,
+        "std": 0.0552
+      },
+      "specificity": {
+        "mean": 0.9947,
+        "std": 0.0013
+      },
+      "mcc": {
+        "mean": 0.6838,
+        "std": 0.0455
+      },
+      "spearman_vs_direct": {
+        "mean": 0.844,
+        "std": 0.0297
+      }
+    },
+    "madhava_native": {
+      "auc": {
+        "mean": 0.9366,
+        "std": 0.011
+      },
+      "f1": {
+        "mean": 0.6881,
+        "std": 0.0311
+      },
+      "precision": {
+        "mean": 0.8514,
+        "std": 0.0379
+      },
+      "recall": {
+        "mean": 0.5812,
+        "std": 0.0519
+      },
+      "specificity": {
+        "mean": 0.995,
+        "std": 0.0016
+      },
+      "mcc": {
+        "mean": 0.6909,
+        "std": 0.0233
+      },
+      "spearman_vs_direct": {
+        "mean": 0.8522,
+        "std": 0.0145
+      }
+    }
+  },
+  "results": [
+    {
+      "train_size": 16000,
+      "test_size": 4000,
+      "K": 30,
+      "methods": {
+        "direct": {
+          "threshold": 0.543873131275177,
+          "f1": 0.6943,
+          "precision": 0.8321,
+          "recall": 0.5956,
+          "specificity": 0.9942,
+          "mcc": 0.6925,
+          "auc": 0.9424,
+          "tp": 109,
+          "fp": 22,
+          "fn": 74,
+          "tn": 3795,
+          "n_pos": 183,
+          "n_neg": 3817,
+          "spearman_vs_direct": 1.0,
+          "latency_s": 0.0
+        },
+        "random": {
+          "threshold": 0.08991996943950653,
+          "f1": 0.0957,
+          "precision": 0.0509,
+          "recall": 0.7978,
+          "specificity": 0.2866,
+          "mcc": 0.0392,
+          "auc": 0.5391,
+          "tp": 146,
+          "fp": 2723,
+          "fn": 37,
+          "tn": 1094,
+          "n_pos": 183,
+          "n_neg": 3817,
+          "spearman_vs_direct": 0.0622,
+          "latency_s": 0.002
+        },
+        "bound": {
+          "threshold": 0.9385446766805265,
+          "f1": 0.5714,
+          "precision": 0.8667,
+          "recall": 0.4262,
+          "specificity": 0.9969,
+          "mcc": 0.5961,
+          "auc": 0.8845,
+          "tp": 78,
+          "fp": 12,
+          "fn": 105,
+          "tn": 3805,
+          "n_pos": 183,
+          "n_neg": 3817,
+          "spearman_vs_direct": 0.6609,
+          "latency_s": 0.199
+        },
+        "madhava": {
+          "threshold": 0.8944971190993765,
+          "f1": 0.6189,
+          "precision": 0.7661,
+          "recall": 0.5191,
+          "specificity": 0.9924,
+          "mcc": 0.6167,
+          "auc": 0.9136,
+          "tp": 95,
+          "fp": 29,
+          "fn": 88,
+          "tn": 3788,
+          "n_pos": 183,
+          "n_neg": 3817,
+          "spearman_vs_direct": 0.8621,
+          "latency_s": 0.396
+        },
+        "madhava_native": {
+          "threshold": 0.8928306102752686,
+          "f1": 0.6731,
+          "precision": 0.8254,
+          "recall": 0.5683,
+          "specificity": 0.9942,
+          "mcc": 0.6729,
+          "auc": 0.9281,
+          "tp": 104,
+          "fp": 22,
+          "fn": 79,
+          "tn": 3795,
+          "n_pos": 183,
+          "n_neg": 3817,
+          "spearman_vs_direct": 0.8472,
+          "latency_s": 0.213,
+          "bound_violations": 0,
+          "bound_checked": 120000
+        }
+      }
+    },
+    {
+      "train_size": 16000,
+      "test_size": 4000,
+      "K": 30,
+      "methods": {
+        "direct": {
+          "threshold": 0.5618271827697754,
+          "f1": 0.6713,
+          "precision": 0.932,
+          "recall": 0.5246,
+          "specificity": 0.9982,
+          "mcc": 0.6896,
+          "auc": 0.9368,
+          "tp": 96,
+          "fp": 7,
+          "fn": 87,
+          "tn": 3810,
+          "n_pos": 183,
+          "n_neg": 3817,
+          "spearman_vs_direct": 1.0,
+          "latency_s": 0.0
+        },
+        "random": {
+          "threshold": 0.09035684913396835,
+          "f1": 0.0905,
+          "precision": 0.0482,
+          "recall": 0.7432,
+          "specificity": 0.2963,
+          "mcc": 0.0181,
+          "auc": 0.5293,
+          "tp": 136,
+          "fp": 2686,
+          "fn": 47,
+          "tn": 1131,
+          "n_pos": 183,
+          "n_neg": 3817,
+          "spearman_vs_direct": 0.0604,
+          "latency_s": 0.002
+        },
+        "bound": {
+          "threshold": 0.9374865366684652,
+          "f1": 0.5758,
+          "precision": 0.9383,
+          "recall": 0.4153,
+          "specificity": 0.9987,
+          "mcc": 0.6141,
+          "auc": 0.8701,
+          "tp": 76,
+          "fp": 5,
+          "fn": 107,
+          "tn": 3812,
+          "n_pos": 183,
+          "n_neg": 3817,
+          "spearman_vs_direct": 0.6101,
+          "latency_s": 0.199
+        },
+        "madhava": {
+          "threshold": 0.8929906995980077,
+          "f1": 0.6323,
+          "precision": 0.8519,
+          "recall": 0.5027,
+          "specificity": 0.9958,
+          "mcc": 0.6427,
+          "auc": 0.9196,
+          "tp": 92,
+          "fp": 16,
+          "fn": 91,
+          "tn": 3801,
+          "n_pos": 183,
+          "n_neg": 3817,
+          "spearman_vs_direct": 0.788,
+          "latency_s": 0.388
+        },
+        "madhava_native": {
+          "threshold": 0.8973488807678223,
+          "f1": 0.6357,
+          "precision": 0.9175,
+          "recall": 0.4863,
+          "specificity": 0.9979,
+          "mcc": 0.6578,
+          "auc": 0.9269,
+          "tp": 89,
+          "fp": 8,
+          "fn": 94,
+          "tn": 3809,
+          "n_pos": 183,
+          "n_neg": 3817,
+          "spearman_vs_direct": 0.831,
+          "latency_s": 0.207,
+          "bound_violations": 0,
+          "bound_checked": 120000
+        }
+      }
+    },
+    {
+      "train_size": 16000,
+      "test_size": 4000,
+      "K": 30,
+      "methods": {
+        "direct": {
+          "threshold": 0.5492332577705383,
+          "f1": 0.7642,
+          "precision": 0.8421,
+          "recall": 0.6995,
+          "specificity": 0.9937,
+          "mcc": 0.7575,
+          "auc": 0.9408,
+          "tp": 128,
+          "fp": 24,
+          "fn": 55,
+          "tn": 3793,
+          "n_pos": 183,
+          "n_neg": 3817,
+          "spearman_vs_direct": 1.0,
+          "latency_s": 0.0
+        },
+        "random": {
+          "threshold": 0.08205603063106537,
+          "f1": 0.0898,
+          "precision": 0.0474,
+          "recall": 0.847,
+          "specificity": 0.1839,
+          "mcc": 0.0167,
+          "auc": 0.5343,
+          "tp": 155,
+          "fp": 3115,
+          "fn": 28,
+          "tn": 702,
+          "n_pos": 183,
+          "n_neg": 3817,
+          "spearman_vs_direct": 0.0488,
+          "latency_s": 0.003
+        },
+        "bound": {
+          "threshold": 0.9359691119856541,
+          "f1": 0.63,
+          "precision": 0.7153,
+          "recall": 0.5628,
+          "specificity": 0.9893,
+          "mcc": 0.6192,
+          "auc": 0.8873,
+          "tp": 103,
+          "fp": 41,
+          "fn": 80,
+          "tn": 3776,
+          "n_pos": 183,
+          "n_neg": 3817,
+          "spearman_vs_direct": 0.6479,
+          "latency_s": 0.2
+        },
+        "madhava": {
+          "threshold": 0.8941867094614726,
+          "f1": 0.707,
+          "precision": 0.8473,
+          "recall": 0.6066,
+          "specificity": 0.9948,
+          "mcc": 0.7059,
+          "auc": 0.9307,
+          "tp": 111,
+          "fp": 20,
+          "fn": 72,
+          "tn": 3797,
+          "n_pos": 183,
+          "n_neg": 3817,
+          "spearman_vs_direct": 0.869,
+          "latency_s": 0.388
+        },
+        "madhava_native": {
+          "threshold": 0.8952322006225586,
+          "f1": 0.7205,
+          "precision": 0.8345,
+          "recall": 0.6339,
+          "specificity": 0.994,
+          "mcc": 0.7163,
+          "auc": 0.9294,
+          "tp": 116,
+          "fp": 23,
+          "fn": 67,
+          "tn": 3794,
+          "n_pos": 183,
+          "n_neg": 3817,
+          "spearman_vs_direct": 0.8754,
+          "latency_s": 0.206,
+          "bound_violations": 0,
+          "bound_checked": 120000
+        }
+      }
+    },
+    {
+      "train_size": 16000,
+      "test_size": 4000,
+      "K": 30,
+      "methods": {
+        "direct": {
+          "threshold": 0.5666534304618835,
+          "f1": 0.7239,
+          "precision": 0.831,
+          "recall": 0.6413,
+          "specificity": 0.9937,
+          "mcc": 0.7189,
+          "auc": 0.9505,
+          "tp": 118,
+          "fp": 24,
+          "fn": 66,
+          "tn": 3792,
+          "n_pos": 184,
+          "n_neg": 3816,
+          "spearman_vs_direct": 1.0,
+          "latency_s": 0.0
+        },
+        "random": {
+          "threshold": 0.09015609323978424,
+          "f1": 0.0962,
+          "precision": 0.0512,
+          "recall": 0.788,
+          "specificity": 0.2959,
+          "mcc": 0.0387,
+          "auc": 0.5376,
+          "tp": 145,
+          "fp": 2687,
+          "fn": 39,
+          "tn": 1129,
+          "n_pos": 184,
+          "n_neg": 3816,
+          "spearman_vs_direct": 0.0729,
+          "latency_s": 0.003
+        },
+        "bound": {
+          "threshold": 0.9393226128927611,
+          "f1": 0.6309,
+          "precision": 0.8246,
+          "recall": 0.5109,
+          "specificity": 0.9948,
+          "mcc": 0.6366,
+          "auc": 0.8857,
+          "tp": 94,
+          "fp": 20,
+          "fn": 90,
+          "tn": 3796,
+          "n_pos": 184,
+          "n_neg": 3816,
+          "spearman_vs_direct": 0.6428,
+          "latency_s": 0.209
+        },
+        "madhava": {
+          "threshold": 0.8937844943208718,
+          "f1": 0.7307,
+          "precision": 0.8489,
+          "recall": 0.6413,
+          "specificity": 0.9945,
+          "mcc": 0.7272,
+          "auc": 0.9362,
+          "tp": 118,
+          "fp": 21,
+          "fn": 66,
+          "tn": 3795,
+          "n_pos": 184,
+          "n_neg": 3816,
+          "spearman_vs_direct": 0.8612,
+          "latency_s": 0.387
+        },
+        "madhava_native": {
+          "threshold": 0.894906759262085,
+          "f1": 0.6957,
+          "precision": 0.8116,
+          "recall": 0.6087,
+          "specificity": 0.9932,
+          "mcc": 0.6908,
+          "auc": 0.9438,
+          "tp": 112,
+          "fp": 26,
+          "fn": 72,
+          "tn": 3790,
+          "n_pos": 184,
+          "n_neg": 3816,
+          "spearman_vs_direct": 0.8578,
+          "latency_s": 0.208,
+          "bound_violations": 0,
+          "bound_checked": 120000
+        }
+      }
+    },
+    {
+      "train_size": 16000,
+      "test_size": 4000,
+      "K": 30,
+      "methods": {
+        "direct": {
+          "threshold": 0.5215217471122742,
+          "f1": 0.7385,
+          "precision": 0.8511,
+          "recall": 0.6522,
+          "specificity": 0.9945,
+          "mcc": 0.7346,
+          "auc": 0.964,
+          "tp": 120,
+          "fp": 21,
+          "fn": 64,
+          "tn": 3795,
+          "n_pos": 184,
+          "n_neg": 3816,
+          "spearman_vs_direct": 1.0,
+          "latency_s": 0.0
+        },
+        "random": {
+          "threshold": 0.09035684913396835,
+          "f1": 0.0971,
+          "precision": 0.0517,
+          "recall": 0.7989,
+          "specificity": 0.293,
+          "mcc": 0.0425,
+          "auc": 0.5619,
+          "tp": 147,
+          "fp": 2698,
+          "fn": 37,
+          "tn": 1118,
+          "n_pos": 184,
+          "n_neg": 3816,
+          "spearman_vs_direct": 0.0785,
+          "latency_s": 0.002
+        },
+        "bound": {
+          "threshold": 0.9386126933588428,
+          "f1": 0.6452,
+          "precision": 0.9474,
+          "recall": 0.4891,
+          "specificity": 0.9987,
+          "mcc": 0.6711,
+          "auc": 0.9042,
+          "tp": 90,
+          "fp": 5,
+          "fn": 94,
+          "tn": 3811,
+          "n_pos": 184,
+          "n_neg": 3816,
+          "spearman_vs_direct": 0.5839,
+          "latency_s": 0.201
+        },
+        "madhava": {
+          "threshold": 0.8874544943920594,
+          "f1": 0.7244,
+          "precision": 0.8828,
+          "recall": 0.6141,
+          "specificity": 0.9961,
+          "mcc": 0.7263,
+          "auc": 0.9562,
+          "tp": 113,
+          "fp": 15,
+          "fn": 71,
+          "tn": 3801,
+          "n_pos": 184,
+          "n_neg": 3816,
+          "spearman_vs_direct": 0.8399,
+          "latency_s": 0.395
+        },
+        "madhava_native": {
+          "threshold": 0.8905820846557617,
+          "f1": 0.7157,
+          "precision": 0.8682,
+          "recall": 0.6087,
+          "specificity": 0.9955,
+          "mcc": 0.7165,
+          "auc": 0.955,
+          "tp": 112,
+          "fp": 17,
+          "fn": 72,
+          "tn": 3799,
+          "n_pos": 184,
+          "n_neg": 3816,
+          "spearman_vs_direct": 0.8495,
+          "latency_s": 0.214,
+          "bound_violations": 0,
+          "bound_checked": 120000
+        }
+      }
+    }
+  ]
+}

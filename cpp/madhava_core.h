@@ -358,6 +358,46 @@ public:
         return r;
     }
 
+    // ========================================================
+    // SCORE — modulated Cauchy-Schwarz bound for ALL centroids
+    // Returns the modulated bound for every candidate (classification
+    // score = max over centroids, taken by the caller).
+    // ========================================================
+
+    std::vector<float> score_all(const float* q) {
+        int N = n_total;
+        float pq1[128], pq2[128], q1s=0, q2s=0;
+        float qn = std::sqrt(dot_f32(q,q,D));
+        for (int j = 0; j < s1; j++) {
+            pq1[j]=dot_f32(q,&P1[j*D],D); q1s+=pq1[j]*pq1[j];
+        }
+        for (int j = 0; j < s2; j++) {
+            pq2[j]=dot_f32(q,&P2[j*D],D); q2s+=pq2[j]*pq2[j];
+        }
+        float qr1=std::sqrt(std::max(0.0f,qn*qn-q1s));
+        float qr2=std::sqrt(std::max(0.0f,qn*qn-q2s));
+        float qm1=0, qm2=0;
+        for (int j = 0; j < s1; j++) qm1+=0.5f*pr1_scale[j]*std::fabs(pq1[j]);
+        for (int j = 0; j < s2; j++) qm2+=0.5f*pr2_scale[j]*std::fabs(pq2[j]);
+
+        float mu = 1e-9f; int cnt=0;
+        for (int i = 0; i < N; i++) { mu += e1[i]; cnt++; }
+        mu /= (float)std::max(cnt,1);
+
+        std::vector<float> scores(N);
+        #pragma omp parallel for
+        for (int i = 0; i < N; i++) {
+            float ub1 = dot_i8_f32(pr1_i8+(size_t)i*s1, pr1_scale, pq1, s1)
+                        + e1[i]*qr1 + qm1 + 1e-5f;
+            float ub2 = dot_i8_f32(pr2_i8+(size_t)i*s2, pr2_scale, pq2, s2)
+                        + e2[i]*qr2 + qm2 + 1e-5f;
+            float de = (e1[i]-e2[i]) / std::max(mu,1e-9f);
+            float al = std::min(0.99f, std::max(0.01f, 1.0f/(1.0f+std::exp(-de*0.5f))));
+            scores[i] = ub1 + al*(ub2-ub1);
+        }
+        return scores;
+    }
+
     int64_t memory_usage() const {
         int64_t t = 0;
         t += (int64_t)s1*D*sizeof(float);
