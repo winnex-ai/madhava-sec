@@ -1,4 +1,5 @@
 # Madhava-Sec 🔒
+[![Pre-Patent](https://img.shields.io/badge/Pre--Patent-Specification-000000?logo=patreon&logoColor=white&labelColor=111111)](docs/PRE_PATENT.md)
 
 **Mathematically Guaranteed Agent Security Framework**
 
