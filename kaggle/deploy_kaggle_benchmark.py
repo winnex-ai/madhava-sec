@@ -195,11 +195,22 @@ class ScoreMadhavaNative:
 # ---- DeBERTa fine-tuned baseline (real safety classifier) ----
 class ScoreDeberta:
     def __init__(self, device='cuda'):
+        import torch
         from transformers import AutoModelForSequenceClassification, AutoTokenizer
         self.tok = AutoTokenizer.from_pretrained('ProtectAI/deberta-v3-base-prompt-injection-v2')
         self.model = AutoModelForSequenceClassification.from_pretrained(
-            'ProtectAI/deberta-v3-base-prompt-injection-v2').to(device)
-        self.model.eval(); self.device = device
+            'ProtectAI/deberta-v3-base-prompt-injection-v2')
+        # Kaggle P100 (Pascal, CC 6.0) has no PyTorch kernel images for modern
+        # torch -> fall back to CPU. Detect via torch.cuda.get_device_capability().
+        use_gpu = False
+        if device == 'cuda' and torch.cuda.is_available():
+            cap = torch.cuda.get_device_capability(0)
+            # Pascal (6.x) and older lack kernels in torch>=2.1.
+            use_gpu = cap[0] >= 7
+        self.device = 'cuda' if use_gpu else 'cpu'
+        self.model = self.model.to(self.device)
+        self.model.eval()
+
     def predict(self, texts, batch_size=64):
         import torch
         out = np.zeros(len(texts), dtype=np.float32)
@@ -211,8 +222,9 @@ class ScoreDeberta:
             out[i:i+len(b)] = p.cpu().numpy()
         return out
 
-print("Loading DeBERTa fine-tuned baseline (GPU)...")
-_deberta = ScoreDeberta()
+print("Loading DeBERTa fine-tuned baseline...")
+_deberta = ScoreDeberta(device='cuda')
+print(f"DeBERTa on: {_deberta.device}")
 
 def optimize_threshold(s, y):
     if len(np.unique(y)) < 2: return 0.5
