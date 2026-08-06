@@ -192,6 +192,28 @@ class ScoreMadhavaNative:
             lib.madhava_sec_verify(self.eng, qq.ctypes.data_as(ctypes.POINTER(ctypes.c_float)), ctypes.byref(v), ctypes.byref(c))
         return v.value, c.value
 
+# ---- DeBERTa fine-tuned baseline (real safety classifier) ----
+class ScoreDeberta:
+    def __init__(self, device='cuda'):
+        from transformers import AutoModelForSequenceClassification, AutoTokenizer
+        self.tok = AutoTokenizer.from_pretrained('ProtectAI/deberta-v3-base-prompt-injection-v2')
+        self.model = AutoModelForSequenceClassification.from_pretrained(
+            'ProtectAI/deberta-v3-base-prompt-injection-v2').to(device)
+        self.model.eval(); self.device = device
+    def predict(self, texts, batch_size=64):
+        import torch
+        out = np.zeros(len(texts), dtype=np.float32)
+        for i in range(0, len(texts), batch_size):
+            b = texts[i:i+batch_size]
+            enc = self.tok(b, padding=True, truncation=True, max_length=512, return_tensors='pt').to(self.device)
+            with torch.no_grad():
+                p = torch.softmax(self.model(**enc).logits, dim=1)[:, 1]
+            out[i:i+len(b)] = p.cpu().numpy()
+        return out
+
+print("Loading DeBERTa fine-tuned baseline (GPU)...")
+_deberta = ScoreDeberta()
+
 def optimize_threshold(s, y):
     if len(np.unique(y)) < 2: return 0.5
     best_f1, best_th = 0.0, 0.5
@@ -241,9 +263,12 @@ for fold, (tr_i, te_i) in enumerate(kf.split(texts, labels)):
     rc /= rcn
 
     methods = {}
-    def add(name, scorer, verify=False):
+    def add(name, scorer, verify=False, kind='emb'):
         t0 = time.time()
-        tr_s = scorer.predict(tr_e); te_s = scorer.predict(te_e)
+        if kind == 'emb':
+            tr_s = scorer.predict(tr_e); te_s = scorer.predict(te_e)
+        else:
+            tr_s = scorer.predict(tr_t); te_s = scorer.predict(te_t)
         lat = time.time()-t0
         th = optimize_threshold(tr_s, tr_y)
         m = classify(te_s, te_y, th)
@@ -262,13 +287,14 @@ for fold, (tr_i, te_i) in enumerate(kf.split(texts, labels)):
     add('random', ScoreRandom(rc))
     add('madhava', ScoreMadhava(cent))
     add('madhava_native', ScoreMadhavaNative(cent), verify=True)
+    add('deberta', _deberta, kind='text')
 
     # clean _raw before storing
     for k in list(methods): methods[k].pop('_raw', None)
     row = {'fold': fold+1, 'K': K, 'methods': methods}
     all_results.append(row)
     print(f"  Fold {fold+1}: ", end="")
-    for name in ['direct','random','madhava','madhava_native']:
+    for name in ['direct','random','madhava','madhava_native','deberta']:
         m = methods[name]
         v = f" viol={m['bound_violations']}/{m['bound_checked']}" if 'bound_violations' in m else ""
         print(f"{name}={m['auc']:.3f}/{m['f1']:.3f}{v}  ", end="")
@@ -280,7 +306,7 @@ print("="*80)
 print("  FINAL SUMMARY (mean over 5 folds)")
 print("="*80)
 summary = {}
-for name in ['direct','random','madhava','madhava_native']:
+for name in ['direct','random','madhava','madhava_native','deberta']:
     vals = {}
     for met in ['auc','f1','precision','recall','specificity','mcc','latency_s']:
         vals[met] = round(float(np.mean([r['methods'][name][met] for r in all_results])),4)
