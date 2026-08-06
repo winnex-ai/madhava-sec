@@ -207,7 +207,11 @@ The mathematical guarantee (0 violations) is always true. The *practical value* 
 
 **Dataset:** [`krishnayadav456wrsty/prompt-injection-and-jailbreak-detection-dataset`](https://www.kaggle.com/datasets/krishnayadav456wrsty/prompt-injection-and-jailbreak-detection-dataset) — a **real** dataset specialized in prompt injection & jailbreak detection: **20,000 prompts** (917 injection, 19,083 benign, ~4.5% attack — realistic imbalance), with categories (Jailbreak, Role-Playing, Instruction Override, Multilingual, Obfuscation…) and hard negatives.
 
-**Setup:** K=30 centroids, per-method threshold optimized on train (F1), evaluated on test, all-MiniLM-L6-v2 (384D), 5-fold stratified CV. **No synthetic data.**
+**Setup:** K=30 centroids, 5-fold stratified CV, per-method threshold optimized **on the train fold** (Youden's J), evaluated **on the test fold** — no leakage. Embeddings: all-MiniLM-L6-v2 (384D). **No synthetic data.**
+
+**Methodology (reproducible, no leakage):**
+- **Centroids:** `K = min(30, max(2, n_train_injections // 10))`, KMeans on **train-fold** attack embeddings only, L2-normalized. Test-fold data never touches centroid construction.
+- **Threshold:** per-method, optimized on the **train fold** (Youden's J = max TPR−FPR), applied to the **test fold**. Every method sees the same splits and labels.
 
 **Official results (Kaggle, GPU P100):**
 
@@ -224,6 +228,24 @@ The mathematical guarantee (0 violations) is always true. The *practical value* 
 - **Native C++ is ~3× faster than the Python scorer** (0.37s vs 1.12s per fold) at equal quality.
 - **Madhava beats random centroids decisively** (AUC 0.942 vs 0.540) — KMeans centroids on real attack data carry real signal.
 - **F1 ≈ 0.69 is the honest regime for a similarity scorer.** It is *not* an elite classifier (see below).
+
+### Comparison vs real security baselines
+
+Madhava-Sec is measured against **actual safety systems**, not just cosine baselines (same real dataset, same 5-fold protocol, per-fold train thresholds, no leakage):
+
+| Method | AUC | F1 | Precision | Recall | MCC |
+|:-------|:---:|:--:|:---------:|:------:|:---:|
+| **DeBERTa** (ProtectAI prompt-injection fine-tune) | **0.9735** | **0.7534** | 0.6494 | **0.9040** | **0.7520** |
+| **Direct** (exact dot product) | 0.9469 | 0.5485 | 0.4122 | 0.8222 | 0.5552 |
+| **Madhava Native** (C++ engine) | 0.9366 | 0.5014 | 0.3669 | 0.8047 | 0.5112 |
+| Random | 0.5404 | 0.0937 | — | — | 0.0303 |
+| **LLM-as-judge** (Qwen2.5-0.5B) | 0.4772 | 0.0000 | — | — | 0.0000 |
+
+**Honest reading:**
+- **A fine-tuned classifier (DeBERTa) is clearly superior** (AUC 0.9735 vs 0.9366, F1 0.753 vs 0.501). Madhava-Sec does **not** beat a dedicated classifier — it is a **provable pruner**, not an elite detector. This is by design.
+- **The LLM-as-judge (Qwen2.5-0.5B) failed** (AUC 0.48, F1 0) — a 0.5B model is too weak to judge prompt injection. This is an honest result, not a cherry-pick.
+- **Llama-Guard / Prompt-Guard are gated** (Meta license) — unavailable without an accepted HF token. They are noted as the correct next baselines.
+- **The value of Madhava-Sec is the cost × guarantee axis:** ~µs per query, 0 bound violations, provable pruning. It is meant to sit *in front of* a DeBERTa/LLM judge to cut cost, not replace it.
 
 Reproduce on Kaggle (or locally):
 ```bash
