@@ -139,8 +139,7 @@ class AgentSecurityFramework:
 
         # 2. Madhava-Sec scoring
         engine = self.engines[self.embedder_models[0]]
-        scores = engine.estimate_score(q_emb)
-        madhava_score = float(max(scores.values()))
+        madhava_score = float(engine.score_vector(q_emb).max())
 
         # 3. SafetyEnsemble
         safety = self.safety.evaluate(query_text) if self.safety else {"safe": False}

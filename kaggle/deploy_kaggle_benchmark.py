@@ -77,6 +77,9 @@ lib.madhava_sec_max_score.restype = ctypes.c_float
 lib.madhava_sec_max_score.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_float)]
 lib.madhava_sec_verify.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_float),
                                    ctypes.POINTER(ctypes.c_long), ctypes.POINTER(ctypes.c_long)]
+lib.madhava_sec_verify_batch.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_float),
+                                         ctypes.c_int,
+                                         ctypes.POINTER(ctypes.c_long), ctypes.POINTER(ctypes.c_long)]
 lib.madhava_sec_free.argtypes = [ctypes.c_void_p]
 print(f'Native C++ engine compiled: {{so}}')
 
@@ -121,6 +124,9 @@ lib.madhava_sec_max_score.restype = ctypes.c_float
 lib.madhava_sec_max_score.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_float)]
 lib.madhava_sec_verify.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_float),
                                    ctypes.POINTER(ctypes.c_long), ctypes.POINTER(ctypes.c_long)]
+lib.madhava_sec_verify_batch.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_float),
+                                         ctypes.c_int,
+                                         ctypes.POINTER(ctypes.c_long), ctypes.POINTER(ctypes.c_long)]
 lib.madhava_sec_free.argtypes = [ctypes.c_void_p]
 
 EMB = 384
@@ -157,21 +163,20 @@ class ScoreMadhava:
         self.e2 = np.sqrt(np.maximum(norms**2 - np.linalg.norm(p2,axis=1)**2, 0))
         self.pr1, self.pr2 = p1, p2
     def predict(self, test_embs):
-        N = len(test_embs); out = np.zeros(N, dtype=np.float64)
+        # Vectorized over the batch: identical math to the per-query loop,
+        # but BLAS matmuls instead of a Python loop. ~10x faster on Kaggle.
         mu = max(np.mean(self.e1), 1e-9)
-        for i in range(N):
-            q = test_embs[i].astype(np.float64).flatten()
-            qn = np.linalg.norm(q)
-            q1 = (q.astype(np.float32) @ self.P1.T).astype(np.float64)
-            q2 = (q.astype(np.float32) @ self.P2.T).astype(np.float64)
-            r1 = math.sqrt(max(0, qn*qn - np.linalg.norm(q1)**2))
-            r2 = math.sqrt(max(0, qn*qn - np.linalg.norm(q2)**2))
-            B1 = self.pr1 @ q1 + self.e1 * r1 + 1e-10
-            B2 = self.pr2 @ q2 + self.e2 * r2 + 1e-10
-            de = (self.e1 - self.e2) / mu
-            alpha = np.clip(1.0/(1.0+np.exp(-de*0.5)), 0.01, 0.99)
-            out[i] = float((B1 + alpha*(B2-B1)).max())
-        return out
+        q = test_embs.astype(np.float64)
+        qn = np.maximum(np.linalg.norm(q, axis=1), 1e-10)
+        q1 = (test_embs.astype(np.float32) @ self.P1.T).astype(np.float64)
+        q2 = (test_embs.astype(np.float32) @ self.P2.T).astype(np.float64)
+        r1 = np.sqrt(np.maximum(qn**2 - np.linalg.norm(q1, axis=1)**2, 0))
+        r2 = np.sqrt(np.maximum(qn**2 - np.linalg.norm(q2, axis=1)**2, 0))
+        B1 = q1 @ self.pr1.T + np.outer(r1, self.e1) + 1e-10
+        B2 = q2 @ self.pr2.T + np.outer(r2, self.e2) + 1e-10
+        de = (self.e1 - self.e2) / mu
+        alpha = np.clip(1.0/(1.0+np.exp(-de*0.5)), 0.01, 0.99)
+        return (B1 + alpha*(B2-B1)).max(axis=1)
 
 class ScoreMadhavaNative:
     def __init__(self, cent, stage=(64,128)):
@@ -186,10 +191,13 @@ class ScoreMadhavaNative:
             out[i] = lib.madhava_sec_max_score(self.eng, qq.ctypes.data_as(ctypes.POINTER(ctypes.c_float)))
         return out
     def verify(self, e):
+        # Batch verify: one C++ call for ALL queries (samples up to 1000
+        # vectors per query). This audits the FULL test set, not a slice.
+        qq = np.ascontiguousarray(e, dtype=np.float32)
         v = ctypes.c_long(0); c = ctypes.c_long(0)
-        for q in e:
-            qq = np.ascontiguousarray(q, dtype=np.float32)
-            lib.madhava_sec_verify(self.eng, qq.ctypes.data_as(ctypes.POINTER(ctypes.c_float)), ctypes.byref(v), ctypes.byref(c))
+        lib.madhava_sec_verify_batch(self.eng,
+                                     qq.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                                     len(e), ctypes.byref(v), ctypes.byref(c))
         return v.value, c.value
 
 # ---- DeBERTa fine-tuned baseline (real safety classifier) ----

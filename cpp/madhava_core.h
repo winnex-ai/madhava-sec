@@ -238,21 +238,15 @@ public:
 
     std::tuple<double,double,long> verify_bounds(const float* q,
                                                   int n_verify=1000) {
-        float pq1[128], pq2[128], q1s=0, q2s=0;
+        float pq1[128], q1s = 0;
         float qn = std::sqrt(dot_f32(q, q, D));
         for (int j = 0; j < s1; j++) {
             pq1[j] = dot_f32(q, &P1[j*D], D); q1s += pq1[j]*pq1[j];
         }
-        for (int j = 0; j < s2; j++) {
-            pq2[j] = dot_f32(q, &P2[j*D], D); q2s += pq2[j]*pq2[j];
-        }
         float qr1 = std::sqrt(std::max(0.0f, qn*qn - q1s));
-        float qr2 = std::sqrt(std::max(0.0f, qn*qn - q2s));
-        float qm1=0, qm2=0;
+        float qm1 = 0;
         for (int j = 0; j < s1; j++)
             qm1 += 0.5f * pr1_scale[j] * std::fabs(pq1[j]);
-        for (int j = 0; j < s2; j++)
-            qm2 += 0.5f * pr2_scale[j] * std::fabs(pq2[j]);
 
         long total=0, violations=0;
         double max_v=0;

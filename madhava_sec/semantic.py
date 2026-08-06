@@ -182,13 +182,9 @@ class SafetyEnsemble:
         return centroids
 
     def _score_texts(self, texts, model_name):
-        """Batch score texts using cached embeddings."""
+        """Batch score texts using cached embeddings (vectorized)."""
         embs = self.embed(texts, model_name)
-        scores = np.zeros(len(texts))
-        for i in range(len(texts)):
-            s = self._engines[model_name].estimate_score(embs[i])
-            scores[i] = max(s.values())
-        return scores
+        return self._engines[model_name].score_vector_batch(embs)
 
     # ─────────────── Weighted Calibration ───────────────
 
@@ -270,8 +266,7 @@ class SafetyEnsemble:
 
         for mn in self.model_names:
             emb = self.embed([text], mn)[0]
-            s = self._engines[mn].estimate_score(emb)
-            max_score = max(s.values())
+            max_score = float(self._engines[mn].score_vector(emb).max())
             th = self._thresholds.get(mn, 0.3)
             flagged = max_score >= th
             w = self._weights.get(mn, 1.0 / max(len(self.model_names), 1))

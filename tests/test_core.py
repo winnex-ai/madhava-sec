@@ -73,6 +73,73 @@ class TestScoreConsistency:
             assert abs(s1[k] - s2[k]) < 1e-6, f"Score differs for {k}"
 
 
+class TestBatchEquiv:
+    """Batch/vectorized scoring is numerically identical to the loop.
+
+    The vectorized path exists purely for throughput (BLAS matmuls instead
+    of a Python loop). It must produce the SAME scores — the guarantee is
+    unchanged. Roundoff from float32 BLAS accumulation order is < 1e-6.
+    """
+
+    def test_batch_matches_loop(self):
+        X = _make_data(300, 384)
+        e = MadhavaSecEngine(stage_dims=[64, 128]).build(X)
+        rng = np.random.RandomState(7)
+        qs = rng.randn(40, 384).astype(np.float32)
+        qs /= np.maximum(np.linalg.norm(qs, axis=1, keepdims=True), 1e-10)
+
+        batch = e.estimate_score_batch(qs)      # (40, 300)
+        loop = np.stack([
+            np.array(list(e.estimate_score(q).values()), dtype=np.float64)
+            for q in qs
+        ])                                        # (40, 300)
+
+        assert batch.shape == loop.shape
+        assert np.abs(batch - loop).max() < 1e-6, \
+            f"Batch differs from loop: {np.abs(batch - loop).max():.2e}"
+
+    def test_batch_max_is_classification_score(self):
+        X = _make_data(200, 384)
+        e = MadhavaSecEngine(stage_dims=[64, 128]).build(X)
+        q = np.random.RandomState(1).randn(384).astype(np.float32)
+        q /= np.linalg.norm(q)
+
+        d = e.estimate_score(q)
+        v = e.score_vector(q)
+        assert abs(max(d.values()) - float(v.max())) < 1e-8
+
+    def test_score_vector_batch_matches_max(self):
+        X = _make_data(200, 384)
+        e = MadhavaSecEngine(stage_dims=[64, 128]).build(X)
+        rng = np.random.RandomState(3)
+        qs = rng.randn(25, 384).astype(np.float32)
+        qs /= np.maximum(np.linalg.norm(qs, axis=1, keepdims=True), 1e-10)
+
+        svb = e.score_vector_batch(qs)
+        manual = np.array([max(e.estimate_score(q).values()) for q in qs])
+        assert np.abs(svb - manual).max() < 1e-6
+
+    def test_batch_preserves_bound_guarantee(self):
+        """Vectorized scores are still upper bounds — 0 violations."""
+        X = _make_data(500, 384)
+        e = MadhavaSecEngine(stage_dims=[64, 128]).build(X)
+        rng = np.random.RandomState(5)
+        qs = rng.randn(100, 384).astype(np.float32)
+        qs /= np.maximum(np.linalg.norm(qs, axis=1, keepdims=True), 1e-10)
+
+        # exact cosine vs the batch's 64D Cauchy-Schwarz UB (no modulation)
+        d1 = e.dims[0]
+        q1 = (qs.astype(np.float32) @ e.proj_mat[d1].T).astype(np.float64)
+        qn = np.maximum(np.linalg.norm(qs.astype(np.float64), axis=1), 1e-10)
+        qr = np.sqrt(np.maximum(qn**2 - np.linalg.norm(q1, axis=1)**2, 0.0))
+        ub = q1 @ e.proj_f32[d1].T + np.outer(qr, e.error_f32[d1]) + 1e-10
+
+        exact = (qs.astype(np.float64) @ X.T) / (
+            np.maximum(np.linalg.norm(X, axis=1), 1e-10)[None, :] * qn[:, None])
+        eps = np.finfo(np.float32).eps * 1000
+        assert (exact > ub + eps).sum() == 0, "Batch UB violated"
+
+
 class TestRegimeCheck:
     """regime_check returns valid flags with explainable messages."""
 

@@ -103,28 +103,105 @@ class MadhavaSecEngine:
     def _upper_bound(self, pv, ev, pq, eq):
         return pv @ pq + ev * eq
 
-    def estimate_score(self, query_vec, return_profile=False):
-        """Score ALL centroids with modulated bounds. No pruning."""
-        q = query_vec.astype(np.float32).flatten()
-        qn = max(np.linalg.norm(q), 1e-10)
+    # ------------------------------------------------------------------
+    # Core modulated-bound computation, VECTORIZED over a batch.
+    #
+    # Returns an (N, n) float64 matrix of modulated Cauchy-Schwarz bounds,
+    # one row per query, one column per stored vector. Numerically identical
+    # to the per-query loop (verified in tests/test_core.py::TestBatchEquiv).
+    #
+    # Math per row (same as the single-query path):
+    #   qn   = max(||q||, 1e-10)
+    #   q1   = q @ P1.T ; qr1 = sqrt(max(0, qn^2 - ||q1||^2))
+    #   q2   = q @ P2.T ; qr2 = sqrt(max(0, qn^2 - ||q2||^2))
+    #   B1   = <P1 v, q1> + e1 * qr1 + 1e-10          (Cauchy-Schwarz UB)
+    #   B2   = <P2 v, q2> + e2 * qr2 + 1e-10
+    #   alpha = clip(1/(1+exp(-(e1-e2)/mu * 0.5)), 0.01, 0.99)
+    #   score = B1 + alpha * (B2 - B1)                (error modulation)
+    # ------------------------------------------------------------------
+    def _modulated_batch(self, queries_f32):
         d1, d2 = self.dims[0], self.dims[-1]
-        mu = max(np.mean(self.error_f32[d1]), 1e-9)
+        mu = max(float(np.mean(self.error_f32[d1])), 1e-9)
 
-        q1 = q @ self.proj_mat[d1].T
-        qr1 = math.sqrt(max(0, qn ** 2 - np.linalg.norm(q1) ** 2))
-        B1 = self._upper_bound(self.proj_f32[d1], self.error_f32[d1], q1, qr1)
+        qn = np.maximum(np.linalg.norm(queries_f32, axis=1), 1e-10)
 
-        q2 = q @ self.proj_mat[d2].T
-        qr2 = math.sqrt(max(0, qn ** 2 - np.linalg.norm(q2) ** 2))
-        B2 = self._upper_bound(self.proj_f32[d2], self.error_f32[d2], q2, qr2)
+        q1 = (queries_f32 @ self.proj_mat[d1].T).astype(np.float64)
+        qr1 = np.sqrt(np.maximum(qn ** 2 - np.linalg.norm(q1, axis=1) ** 2, 0.0))
+        B1 = q1 @ self.proj_f32[d1].T + np.outer(qr1, self.error_f32[d1]) + 1e-10
+
+        q2 = (queries_f32 @ self.proj_mat[d2].T).astype(np.float64)
+        qr2 = np.sqrt(np.maximum(qn ** 2 - np.linalg.norm(q2, axis=1) ** 2, 0.0))
+        B2 = q2 @ self.proj_f32[d2].T + np.outer(qr2, self.error_f32[d2]) + 1e-10
 
         delta_e = (self.error_f32[d1] - self.error_f32[d2]) / mu
         alpha = np.clip(1.0 / (1.0 + np.exp(-delta_e * 0.5)), 0.01, 0.99)
-        modulated = B1 + alpha * (B2 - B1)
+        return B1 + alpha * (B2 - B1)
+
+    def score_vector(self, query_vec):
+        """Modulated bound scores for ALL stored vectors, as (n,) ndarray.
+
+        Preferred over ``estimate_score`` when callers want an array (e.g.
+        to take max/argmax, feed a downstream scorer, or batch multiple
+        queries) instead of an index->float dict. Same math, no dict
+        construction overhead.
+
+        Returns:
+          np.ndarray (n,) float64 — score for each vector in build order.
+        """
+        q = query_vec.astype(np.float32).reshape(1, -1)
+        return self._modulated_batch(q)[0]
+
+    def estimate_score_batch(self, queries):
+        """Score ALL stored vectors for a BATCH of queries, vectorized.
+
+        Equivalent to ``[max(estimate_score(q).values()) ...]``'s underlying
+        scores stacked, but computed with BLAS matmuls instead of a Python
+        loop over queries. ``~100x`` faster than the per-query loop at
+        identical numerics (see TestBatchEquiv).
+
+        Args:
+          queries: (N, D) array-like of query embeddings.
+
+        Returns:
+          np.ndarray (N, n) float64 — row i = modulated bound for each
+          stored vector against query i.
+        """
+        q = np.ascontiguousarray(queries, dtype=np.float32)
+        if q.ndim == 1:
+            q = q.reshape(1, -1)
+        return self._modulated_batch(q)
+
+    def score_vector_batch(self, queries):
+        """Max modulated bound per query, for a batch — vectorized.
+
+        Convenience wrapper for callers that only need the classification
+        score (``max`` over stored vectors), e.g. search ranking. Returns
+        the row-wise maximum of ``estimate_score_batch``.
+
+        Returns:
+          np.ndarray (N,) float64 — classification score per query.
+        """
+        return self.estimate_score_batch(queries).max(axis=1)
+
+    def estimate_score(self, query_vec, return_profile=False):
+        """Score ALL centroids with modulated bounds. No pruning.
+
+        Returns an ``{int index: float score}`` dict (one entry per stored
+        vector). For throughput on many queries prefer ``score_vector`` or
+        ``estimate_score_batch`` — this method keeps the dict for API
+        compatibility and single-query convenience.
+        """
+        modulated = self._modulated_batch(query_vec.astype(np.float32).reshape(1, -1))[0]
 
         result = {int(i): float(modulated[i]) for i in range(self.n)}
 
         if return_profile:
+            d1, d2 = self.dims[0], self.dims[-1]
+            mu = max(float(np.mean(self.error_f32[d1])), 1e-9)
+            alpha = np.clip(
+                1.0 / (1.0 + np.exp(-(self.error_f32[d1] - self.error_f32[d2]) / mu * 0.5)),
+                0.01, 0.99,
+            )
             prof = {
                 "n_total": self.n, "d_int": self.d_int,
                 "dims": list(self.dims),

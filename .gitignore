@@ -5,6 +5,8 @@ __pycache__/
 dist/
 build/
 *.so
+# Native binaries (compiled locally — never committed)
+cpp/madhava_sec_benchmark
 
 # Environment & Secrets
 .env

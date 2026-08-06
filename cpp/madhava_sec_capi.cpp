@@ -54,6 +54,23 @@ void madhava_sec_verify(MadhavaSec h, const float* q, long* violations, long* ch
     *checked = n;
 }
 
+/* verify_batch: verify a whole batch of queries in ONE C++ call.
+   Samples up to max_checks_per_query vectors per query (verify_bounds'
+   internal cap). Sums violations/checks across all queries — the honest
+   full-scale bound audit for a benchmark. No per-query ctypes hop. */
+void madhava_sec_verify_batch(MadhavaSec h, const float* queries, int n_queries,
+                              long* violations, long* checked) {
+    auto* e = (madhava_sec::MadhavaSecEngine*)h;
+    long total_v = 0, total_c = 0;
+    for (int i = 0; i < n_queries; i++) {
+        auto [vrate, maxv, n] = e->verify_bounds(queries + (size_t)i * e->D, 1000);
+        total_v += (long)(vrate * n);
+        total_c += n;
+    }
+    *violations = total_v;
+    *checked = total_c;
+}
+
 void madhava_sec_free(MadhavaSec h) {
     delete (madhava_sec::MadhavaSecEngine*)h;
 }

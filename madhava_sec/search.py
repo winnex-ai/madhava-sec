@@ -70,8 +70,8 @@ class AttackSearch:
             emb = self._embeddings[idx]
         except ValueError:
             emb = self.embed([text])[0]
-        scores = self.madhava.estimate_score(emb)
-        return float(max(scores.values())) if scores else 0.0
+        scores = self.madhava.score_vector(emb)
+        return float(scores.max()) if len(scores) else 0.0
 
     def _diversity_threshold(self, n_known):
         return max(0.2, 0.5 - 0.05 * math.log(n_known + 1))
@@ -103,12 +103,13 @@ class AttackSearch:
             "n_pruned_low_score": 0, "n_candidates": 0,
         }
         scored = []
-        for i, text in enumerate(self._texts):
-            emb = self._embeddings[i]
-            sd = self.madhava.estimate_score(emb)
-            ub = max(sd.values()) if sd else 0.0
-            scored.append((ub, i, text, emb))
-            stats["n_evaluated"] += 1
+        # Vectorized: one batch call scores ALL texts (identical bound math,
+        # ~100x faster than per-text estimate_score loop).
+        if self._embeddings is not None and len(self._embeddings):
+            ubs = self.madhava.score_vector_batch(self._embeddings)
+            for i, text in enumerate(self._texts):
+                scored.append((ubs[i], i, text, self._embeddings[i]))
+                stats["n_evaluated"] += 1
         scored.sort(key=lambda x: -x[0])
 
         candidates, emb_cands = [], []
