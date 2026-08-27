@@ -1,0 +1,20 @@
+{
+  "title": "Winnex Quality Flags — Normalize 1.1.0",
+  "code_file": "benchmark_quality_flags.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": "true",
+  "enable_gpu": "false",
+  "enable_tpu": "false",
+  "enable_internet": "true",
+  "dataset_sources": [
+    "rtatman/glove-global-vectors-for-word-representation",
+    "hojjatk/mnist-dataset",
+    "julien040/hacker-news-openai-embeddings",
+    "ayan78/stsbrenchmark"
+  ],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": [],
+  "id": "kleniopadilha/winnex-quality-flags-normalize-1-1-0"
+}
